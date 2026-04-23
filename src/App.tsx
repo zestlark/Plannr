@@ -1,41 +1,39 @@
+import { BrowserRouter, Routes, Route, useOutletContext } from 'react-router-dom';
 import { AppProvider } from '@/store/AppContext';
-import { Toolbar } from '@/components/Toolbar/Toolbar';
-import { Board } from '@/components/Board/Board';
-import { ExpenseSummary } from '@/components/Summary/ExpenseSummary';
+import { MainLayout } from '@/components/Navigation/MainLayout';
+import { DashboardView } from '@/views/DashboardView';
+import { PeopleView } from '@/views/PeopleView';
+import { SummaryView } from '@/views/SummaryView';
+import { DataView } from '@/views/DataView';
 import { Toaster } from 'sonner';
 
-function AppContent() {
-  return (
-    <div className="max-w-[1400px] mx-auto w-full flex flex-col items-center">
-      <header className="w-full text-center mb-10 pt-4">
-        <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center gap-3 drop-shadow-sm">
-          <span className="text-4xl filter drop-shadow-md">🛒</span> 
-          Villa Shopping Organizer
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">Plan, drag, drop, and settle expenses instantly.</p>
-      </header>
-
-      <Toolbar />
-      <Board />
-      <div className="w-full">
-        <ExpenseSummary />
-      </div>
-      
-      <Toaster 
-        position="top-right" 
-        expand={false} 
-        richColors 
-        theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'} 
-      />
-    </div>
-  );
+// Helper to bridge search query to views
+function DashboardRoute() {
+  const { searchQuery } = useOutletContext<{ searchQuery: string }>();
+  return <DashboardView searchQuery={searchQuery} />;
 }
 
 function App() {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <BrowserRouter>
+      <AppProvider>
+        <Routes>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<DashboardRoute />} />
+            <Route path="people" element={<PeopleView />} />
+            <Route path="summary" element={<SummaryView />} />
+            <Route path="settings" element={<DataView />} />
+          </Route>
+        </Routes>
+        
+        <Toaster 
+          position="top-right" 
+          expand={false} 
+          richColors 
+          theme="light"
+        />
+      </AppProvider>
+    </BrowserRouter>
   );
 }
 

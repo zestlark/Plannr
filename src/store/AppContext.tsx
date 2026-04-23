@@ -11,13 +11,15 @@ interface AppContextProps {
   removePerson: (name: string) => void;
   addCategory: (title: string) => void;
   renameCategory: (id: string, newTitle: string) => void;
-  addItem: (categoryId: string, name: string) => void;
+  addItem: (categoryId: string, name: string, unit?: UnitType) => void;
   deleteItem: (categoryId: string, itemId: string) => void;
   updateItem: (categoryId: string, itemId: string, updates: Partial<Item>) => void;
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
   exportData: () => string;
   importData: (jsonStr: string) => void;
   sortAllItems: () => void;
+  copyCategoryToClipboard: (id: string) => void;
+  deleteCategory: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -28,8 +30,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   const sanitizeData = (data: any): { persons: string[], categories: Category[] } => {
-    const persons = Array.isArray(data.persons) ? data.persons : INITIAL_PERSONS;
-    const rawCategories = Array.isArray(data.categories) ? data.categories : INITIAL_CATEGORIES;
+    const persons = Array.isArray(data.persons) ? data.persons : [];
+    const rawCategories = Array.isArray(data.categories) ? data.categories : [];
 
     const categories = rawCategories.map((c: any) => ({
       id: c.id || uuidv4(),
@@ -57,24 +59,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setPersons(persons);
         setCategories(categories);
       } else {
-        // Fallback to older vanilla JS localstorage if exists
-        const oldPersons = localStorage.getItem('persons');
-        const oldCategories = localStorage.getItem('villaShopping');
-        if (oldPersons || oldCategories) {
-          const parsedOldPersons = oldPersons ? JSON.parse(oldPersons) : INITIAL_PERSONS;
-          const parsedOldCats = oldCategories ? JSON.parse(oldCategories) : [];
-          
-          const { persons, categories } = sanitizeData({ 
-            persons: parsedOldPersons, 
-            categories: parsedOldCats 
-          });
-          
-          setPersons(persons);
-          setCategories(categories.length ? categories : INITIAL_CATEGORIES);
-        } else {
-          setPersons(INITIAL_PERSONS);
-          setCategories(INITIAL_CATEGORIES);
-        }
+        setPersons(INITIAL_PERSONS);
+        setCategories(INITIAL_CATEGORIES);
       }
     } catch (err) {
       console.error('Error loading data:', err);
@@ -119,11 +105,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     toast.success('Category Renamed');
   };
 
-  const addItem = (categoryId: string, name: string) => {
+  const addItem = (categoryId: string, name: string, unit: UnitType = 'pcs') => {
     if (!name.trim()) return;
     setCategories(prev => prev.map(c => {
       if (c.id !== categoryId) return c;
-      const newItem: Item = { id: uuidv4(), name: name.trim(), qty: 1, unit: 'pcs', person: '', price: 0 };
+      const newItem: Item = { id: uuidv4(), name: name.trim(), qty: 1, unit, person: '', price: 0 };
       return { ...c, items: [...c.items, newItem] };
     }));
   };
@@ -152,14 +138,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const importData = (jsonStr: string) => {
     try {
-      const data = JSON.parse(jsonStr);
+      // Replace non-breaking spaces and other hidden characters that crash JSON.parse
+      const cleaned = jsonStr.replace(/\u00A0/g, ' ').trim();
+      const data = JSON.parse(cleaned);
       const { persons: newPersons, categories: newCategories } = sanitizeData(data);
       
       setPersons(newPersons);
       setCategories(newCategories);
       
       toast.success('Imported Successfully');
-    } catch {
+    } catch (e) {
+      console.error('Import error:', e);
       toast.error('Invalid JSON format');
     }
   };
@@ -177,12 +166,50 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     toast.success('Sorted A-Z by Person');
   };
 
+  const copyCategoryToClipboard = (id: string) => {
+    const cat = categories.find(c => c.id === id);
+    if (!cat) return;
+    
+    // Sort items before copying as per requirement
+    const sortedItems = [...cat.items].sort((a, b) => {
+      const pA = a.person || 'Unassigned';
+      const pB = b.person || 'Unassigned';
+      if (pA !== pB) return pA.localeCompare(pB);
+      return a.name.localeCompare(b.name);
+    });
+
+    let summary = `🛒 📍 *${cat.title}*\n\n`;
+    const byPerson: Record<string, Item[]> = {};
+    sortedItems.forEach(i => {
+      const p = i.person || 'Unassigned';
+      if (!byPerson[p]) byPerson[p] = [];
+      byPerson[p].push(i);
+    });
+
+    Object.keys(byPerson).sort().forEach((person, idx, arr) => {
+      summary += `*${person}*\n`;
+      byPerson[person].forEach(item => {
+        summary += `• ${item.name} - ${item.qty} ${item.unit}\n`;
+      });
+      if (idx < arr.length - 1) summary += `\n-------\n`;
+    });
+
+    navigator.clipboard.writeText(summary.trim());
+    toast.success('Category List Copied!');
+  };
+
+  const deleteCategory = (id: string) => {
+    setCategories(prev => prev.filter(c => c.id !== id));
+    toast.success('Category Deleted');
+  };
+
   if (!isLoaded) return null;
 
   return (
     <AppContext.Provider value={{
       persons, categories, addPerson, removePerson, addCategory, renameCategory,
-      addItem, deleteItem, updateItem, setCategories, exportData, importData, sortAllItems
+      addItem, deleteItem, updateItem, setCategories, exportData, importData, sortAllItems,
+      copyCategoryToClipboard, deleteCategory
     }}>
       {children}
     </AppContext.Provider>

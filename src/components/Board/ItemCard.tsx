@@ -1,154 +1,239 @@
-import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Item, UnitType } from '@/types';
 import { useAppStore } from '@/store/AppContext';
-import { UNITS } from '@/constants';
-import { Trash2, GripVertical, Minus, Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { clsx } from 'clsx';
 
 interface Props {
   item: Item;
   categoryId: string;
 }
 
-export const ItemCard = ({ item, categoryId }: Props) => {
-  const { updateItem, deleteItem, persons } = useAppStore();
-  const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState(item.name);
+const UNITS: UnitType[] = ['pcs', 'kg', 'ltr', 'pack', 'gm'];
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
+export const ItemCard = ({ item, categoryId }: Props) => {
+  const { deleteItem, updateItem, persons } = useAppStore();
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [isEditingQty, setIsEditingQty] = useState(false);
+  const [editName, setEditName] = useState(item.name);
+  const [editQty, setEditQty] = useState(item.qty.toString());
+
+  useEffect(() => {
+    setEditQty(item.qty.toString());
+  }, [item.qty]);
+
+  useEffect(() => {
+    setEditName(item.name);
+  }, [item.name]);
+
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
-    data: { type: 'Item', item, categoryId },
+    data: { type: 'Item', item, categoryId }
   });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.4 : 1,
+    opacity: isDragging ? 0.3 : 1,
+    zIndex: isDragging ? 1000 : 1,
   };
 
-  const handleMinus = () => {
+  const handleUpdateQty = (e: React.MouseEvent, delta: number) => {
+    e.preventDefault();
+    e.stopPropagation();
     const step = ['kg', 'ltr', 'gm'].includes(item.unit) ? 0.5 : 1;
-    updateItem(categoryId, item.id, { qty: Math.max(0, item.qty - step) });
+    const newVal = Math.max(0, item.qty + (delta * step));
+    updateItem(categoryId, item.id, { qty: newVal });
   };
 
-  const handlePlus = () => {
-    const step = ['kg', 'ltr', 'gm'].includes(item.unit) ? 0.5 : 1;
-    updateItem(categoryId, item.id, { qty: item.qty + step });
+  const handleManualQtySave = () => {
+    const val = parseFloat(editQty);
+    if (!isNaN(val)) {
+      updateItem(categoryId, item.id, { qty: Math.max(0, val) });
+    }
+    setIsEditingQty(false);
   };
 
   const saveName = () => {
     if (editName.trim()) {
       updateItem(categoryId, item.id, { name: editName.trim() });
-    } else {
-      setEditName(item.name);
     }
-    setIsEditing(false);
+    setIsEditingName(false);
+  };
+
+  const setUnit = (u: UnitType) => {
+    updateItem(categoryId, item.id, { unit: u });
+  };
+
+  const handlePersonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    updateItem(categoryId, item.id, { person: e.target.value });
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`group relative bg-white dark:bg-slate-800 border ${isDragging ? 'border-primary' : 'border-slate-200 dark:border-slate-700'} p-4 rounded-xl shadow-sm hover:shadow-md transition-all mb-3 flex flex-col gap-3`}
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className={clsx(
+        "group/item bg-surface-container-lowest p-3 rounded-xl transition-all duration-200 flex flex-col gap-2 relative border border-transparent shadow-sm",
+        isDragging ? "shadow-2xl ring-2 ring-primary border-primary" : "hover:shadow-md hover:border-outline-variant"
+      )}
     >
-      <div className="flex justify-between items-start gap-2">
-        <div className="flex items-start gap-2 flex-1">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start gap-2 flex-1 min-w-0">
           <div 
             {...attributes} 
             {...listeners} 
-            className="mt-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-grab active:cursor-grabbing"
+            className="mt-1 p-1 -m-1 cursor-grab active:cursor-grabbing text-on-surface-variant/30 hover:text-primary transition-colors flex shrink-0"
           >
-            <GripVertical size={16} />
+            <span className="material-symbols-outlined text-[18px]">drag_indicator</span>
           </div>
           
-          <div className="flex-1">
-            {isEditing ? (
+          <div className="flex-1 min-w-0">
+            {isEditingName ? (
               <input
                 autoFocus
-                className="input-focus w-full px-2 py-1 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded"
+                className="w-full px-2 py-0.5 bg-surface-container-low border border-primary rounded-md text-sm outline-none"
                 value={editName}
                 onChange={e => setEditName(e.target.value)}
                 onBlur={saveName}
                 onKeyDown={e => e.key === 'Enter' && saveName()}
               />
             ) : (
-              <div 
-                className="font-semibold text-slate-800 dark:text-slate-100 cursor-text hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                onDoubleClick={() => setIsEditing(true)}
+              <span 
+                className="font-medium text-on-surface truncate block cursor-pointer hover:text-primary transition-colors py-0.5"
+                onClick={(e) => { e.stopPropagation(); setIsEditingName(true); }}
               >
                 {item.name}
-              </div>
+              </span>
             )}
           </div>
         </div>
-        
+
         <button 
-          onClick={() => deleteItem(categoryId, item.id)}
-          className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded transition-all"
+          onPointerDown={e => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); deleteItem(categoryId, item.id); }}
+          className="opacity-0 group-hover/item:opacity-100 p-1 text-on-surface-variant hover:text-danger hover:bg-danger/5 rounded-lg transition-all"
         >
-          <Trash2 size={14} />
+          <span className="material-symbols-outlined text-[18px]">close</span>
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Price Input */}
-        <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900 focus-within:border-indigo-500 transition-colors px-2 py-1">
-          <span className="text-slate-400 text-sm">₹</span>
-          <input
-            type="number"
-            min="0"
-            className="w-14 bg-transparent border-none text-sm outline-none px-1 text-slate-700 dark:text-slate-200"
-            value={item.price || ''}
-            onChange={e => updateItem(categoryId, item.id, { price: parseFloat(e.target.value) || 0 })}
-            placeholder="0"
-          />
-        </div>
-
-        {/* Qty Controls */}
-        <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden h-8">
-          <button 
-            className="bg-slate-100 dark:bg-slate-800 px-2 h-full text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-            onClick={handleMinus}
-          >
-            <Minus size={14} />
-          </button>
-          <div className="min-w-[40px] text-center text-sm font-medium bg-slate-50 dark:bg-slate-900 h-full flex items-center justify-center text-slate-800 dark:text-slate-200">
-            {item.qty}
+      <div className="flex flex-col gap-2.5 mt-1">
+        <div className="flex items-center justify-between gap-3">
+          {/* Quantity and +/- buttons */}
+          <div className="flex items-center gap-1 bg-surface-container-low px-1 py-1 rounded-lg border border-outline-variant/30 shadow-inner">
+            <button 
+              onPointerDown={e => e.stopPropagation()}
+              onClick={(e) => handleUpdateQty(e, -1)} 
+              className="text-on-surface-variant hover:text-primary transition-colors p-1 rounded hover:bg-surface-container-high"
+            >
+              <span className="material-symbols-outlined text-[18px]">remove</span>
+            </button>
+            
+            <div className="flex items-center gap-1 min-w-[50px] justify-center bg-surface-container-lowest/90 rounded-md px-2 py-1 border border-outline-variant/10 shadow-sm">
+              {isEditingQty ? (
+                <input
+                  autoFocus
+                  type="text"
+                  className="w-8 text-center bg-transparent border-none outline-none font-bold text-sm"
+                  value={editQty}
+                  onChange={e => setEditQty(e.target.value)}
+                  onBlur={handleManualQtySave}
+                  onKeyDown={e => e.key === 'Enter' && handleManualQtySave()}
+                />
+              ) : (
+                <span 
+                  className="font-bold text-on-surface text-sm cursor-pointer hover:text-primary transition-colors flex items-center gap-0.5"
+                  onClick={(e) => { e.stopPropagation(); setIsEditingQty(true); }}
+                >
+                  {item.qty}
+                </span>
+              )}
+            </div>
+            
+            <button 
+              onPointerDown={e => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); handleUpdateQty(e, 1); }} 
+              className="text-on-surface-variant hover:text-primary transition-colors p-1 rounded hover:bg-surface-container-high"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+            </button>
           </div>
-          <button 
-            className="bg-slate-100 dark:bg-slate-800 px-2 h-full text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-            onClick={handlePlus}
-          >
-            <Plus size={14} />
-          </button>
+
+          <div className="flex items-center gap-3 ml-auto">
+            {/* Price Input */}
+            <div className="flex items-center text-on-surface-variant font-medium bg-surface-container-low px-2 py-1 rounded-lg border border-outline-variant/30 hover:border-primary/30 transition-all focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary shadow-inner">
+              <span className="text-[10px] mr-1 opacity-60 font-bold">₹</span>
+              <input
+                type="number"
+                step="any"
+                value={item.price || ''}
+                onPointerDown={e => e.stopPropagation()}
+                onChange={e => updateItem(categoryId, item.id, { price: Number(e.target.value) || 0 })}
+                className="w-12 bg-transparent outline-none text-right hide-arrows text-sm font-bold text-on-surface"
+                placeholder="0"
+              />
+            </div>
+
+            {/* Assignee Circle */}
+            <div className="relative group/assignee shrink-0">
+              <div 
+                className={clsx(
+                  "w-9 h-9 rounded-full flex items-center justify-center transition-all border shadow-sm",
+                  item.person ? "bg-primary border-primary text-on-primary ring-2 ring-primary/10 shadow-md" : "bg-surface-container-low border-outline-variant/30 text-on-surface-variant/40 hover:border-primary hover:bg-surface-container"
+                )}
+              >
+                {item.person ? (
+                  <span className="text-[10px] font-black uppercase tracking-tighter">{item.person.slice(0, 2)}</span>
+                ) : (
+                  <span className="material-symbols-outlined text-[20px]">person_add</span>
+                )}
+              </div>
+              <select 
+                value={item.person || ''}
+                onPointerDown={e => e.stopPropagation()}
+                onChange={handlePersonChange}
+                title={item.person || 'Unassigned'}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer appearance-none"
+              >
+                <option value="">Unassigned</option>
+                {persons.map(p => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
 
-        {/* Unit Select */}
-        <select
-          className="input-focus h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm px-2 text-slate-700 dark:text-slate-200"
-          value={item.unit}
-          onChange={e => updateItem(categoryId, item.id, { unit: e.target.value as UnitType })}
-        >
-          {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-        </select>
-
-        {/* Person Select */}
-        <select
-          className="input-focus h-8 flex-1 min-w-[100px] rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm px-2 text-slate-700 dark:text-slate-200"
-          value={item.person || ''}
-          onChange={e => updateItem(categoryId, item.id, { person: e.target.value })}
-        >
-          <option value="">Unassigned</option>
-          {persons.map(p => <option key={p} value={p}>{p}</option>)}
-        </select>
+        {/* Measurement Selection & Total Price */}
+        <div className="flex items-center justify-between gap-1.5 mt-0.5">
+          <div className="flex items-center gap-1.5 min-w-0">
+             <span className="text-[10px] uppercase font-bold text-on-surface-variant/40 shrink-0">Unit:</span>
+             <div className="relative group/unit shrink-0">
+                <div className="bg-surface-container border border-outline-variant/30 px-2 py-0.5 rounded-md text-[11px] font-black uppercase text-primary flex items-center gap-0.5">
+                  {item.unit}
+                  <span className="material-symbols-outlined text-[14px] opacity-50">expand_more</span>
+                </div>
+                <select 
+                  value={item.unit}
+                  onPointerDown={e => e.stopPropagation()}
+                  onChange={(e) => setUnit(e.target.value as any)}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer appearance-none"
+                >
+                  {UNITS.map(u => (
+                    <option key={u} value={u}>{u.toUpperCase()}</option>
+                  ))}
+                </select>
+             </div>
+          </div>
+          
+          <div className="bg-primary/5 px-2 py-0.5 rounded-md border border-primary/10">
+            <span className="text-[11px] font-black text-primary uppercase tracking-tight whitespace-nowrap">
+              Total: ₹{(item.qty * (item.price || 0)).toFixed(0)}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );

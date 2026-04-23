@@ -1,9 +1,19 @@
 import { useAppStore } from '@/store/AppContext';
 import { useMemo } from 'react';
 import { Item } from '@/types';
+import { generateWhatsAppSummary, copyToClipboard } from '@/utils';
 
-export const ExpenseSummary = () => {
+interface ExpenseSummaryProps {
+  showOnly?: 'products' | 'people';
+}
+
+export const ExpenseSummary = ({ showOnly }: ExpenseSummaryProps) => {
   const { categories } = useAppStore();
+
+  const handleCopySummary = () => {
+    const text = generateWhatsAppSummary(categories);
+    copyToClipboard(text, 'Full Summary Copied!');
+  };
 
   const { totalItems, personTotals, grandTotal, itemsList } = useMemo(() => {
     let itemsList: (Item & {categoryName: string, total: number})[] = [];
@@ -29,71 +39,92 @@ export const ExpenseSummary = () => {
     return { totalItems: itemsList.length, personTotals, grandTotal, itemsList };
   }, [categories]);
 
-  if (totalItems === 0) return null;
+  if (totalItems === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-20 text-center text-on-surface-variant/40">
+        <span className="material-symbols-outlined text-[64px] mb-4 opacity-10">receipt_long</span>
+        <h3 className="font-h2 text-h2 mb-2">No Expenses Yet</h3>
+        <p className="max-w-xs">Add items with prices in the Dashboard to see your summary reports here.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="mt-10 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
-      <h2 className="text-lg font-semibold mb-4 text-slate-800 dark:text-slate-100 flex items-center gap-2">
-        <span className="text-xl">📊</span> Shopping & Payment Summary
-      </h2>
+    <div className="w-full bg-surface-container-lowest p-6 rounded-xl border border-outline-variant transition-colors relative">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="font-h2 text-h2 text-on-surface">Calculated Metrics</h2>
+        <button 
+          onClick={handleCopySummary}
+          className="flex items-center gap-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 hover:shadow-md transition-all font-button active:scale-95"
+        >
+          <span className="material-symbols-outlined text-[18px]">content_copy</span>
+          Copy WhatsApp List
+        </button>
+      </div>
       
-      <div className="overflow-x-auto mb-8">
-        <table className="w-full min-w-[600px] text-left border-collapse">
-          <thead>
-            <tr>
-              <th className="py-3 px-4 bg-slate-50 dark:bg-slate-900/50 font-semibold text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">Product</th>
-              <th className="py-3 px-4 bg-slate-50 dark:bg-slate-900/50 font-semibold text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">Price/Unit</th>
-              <th className="py-3 px-4 bg-slate-50 dark:bg-slate-900/50 font-semibold text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">Qty</th>
-              <th className="py-3 px-4 bg-slate-50 dark:bg-slate-900/50 font-semibold text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">Assigned To</th>
-              <th className="py-3 px-4 bg-slate-50 dark:bg-slate-900/50 font-semibold text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">Total</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-            {itemsList.map(item => (
-              <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                <td className="py-3 px-4">
-                  <span className="font-medium text-slate-800 dark:text-slate-200">{item.name}</span>
-                  <span className="text-slate-500 dark:text-slate-400 text-xs ml-2">({item.categoryName})</span>
-                </td>
-                <td className="py-3 px-4 text-slate-600 dark:text-slate-300">₹{Number(item.price || 0).toFixed(2)}</td>
-                <td className="py-3 px-4 text-slate-600 dark:text-slate-300">{item.qty} {item.unit}</td>
-                <td className="py-3 px-4">
-                  <span className="inline-block bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 py-1 px-3 rounded-full text-xs font-medium">
-                    {item.person || 'Unassigned'}
-                  </span>
-                </td>
-                <td className="py-3 px-4 font-medium text-slate-800 dark:text-slate-200">₹{Number(item.total || 0).toFixed(2)}</td>
+      {(!showOnly || showOnly === 'products') && (
+        <div className="overflow-x-auto mb-8 animate-in fade-in duration-300">
+          <table className="w-full min-w-[600px] text-left border-collapse">
+            <thead>
+              <tr className="bg-surface-container-low">
+                <th className="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider border-b border-outline-variant">Product</th>
+                <th className="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider border-b border-outline-variant text-right">Price</th>
+                <th className="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider border-b border-outline-variant text-center">Qty</th>
+                <th className="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider border-b border-outline-variant">Person</th>
+                <th className="py-3 px-4 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider border-b border-outline-variant text-right">Total</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-outline-variant">
+              {itemsList.map(item => (
+                <tr key={item.id} className="hover:bg-surface-container-low/50 transition-colors">
+                  <td className="py-4 px-4">
+                    <span className="font-medium text-on-surface block">{item.name}</span>
+                    <span className="text-[11px] uppercase font-bold text-primary/50 tracking-widest">{item.categoryName}</span>
+                  </td>
+                  <td className="py-4 px-4 text-right font-body-md text-on-surface-variant">₹{Number(item.price || 0).toLocaleString()}</td>
+                  <td className="py-4 px-4 text-center font-body-md text-on-surface-variant font-bold">{item.qty} <span className="text-[10px] opacity-60 uppercase">{item.unit}</span></td>
+                  <td className="py-4 px-4">
+                    <div className="flex items-center gap-2">
+                       <div className="w-2 h-2 rounded-full bg-primary/40"></div>
+                       <span className="text-on-surface font-medium whitespace-nowrap">{item.person || 'Unassigned'}</span>
+                    </div>
+                  </td>
+                  <td className="py-4 px-4 text-right font-body-md font-black text-on-surface">₹{Number(item.total || 0).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      <h3 className="text-md font-semibold mb-4 text-slate-800 dark:text-slate-100 mt-6 flex items-center gap-2">
-        <span className="text-xl">💰</span> Total to Pay by Person
-      </h3>
-      <div className="overflow-x-auto max-w-lg">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr>
-              <th className="py-3 px-4 bg-slate-50 dark:bg-slate-900/50 font-semibold text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">Person</th>
-              <th className="py-3 px-4 bg-slate-50 dark:bg-slate-900/50 font-semibold text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">Amount to Pay</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+      {(!showOnly || showOnly === 'people') && (
+        <div className="animate-in fade-in duration-300">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.entries(personTotals).map(([person, total]) => (
-              <tr key={person}>
-                <td className="py-3 px-4 font-medium text-slate-800 dark:text-slate-200">{person}</td>
-                <td className="py-3 px-4 font-semibold text-indigo-600 dark:text-indigo-400">₹{Number(total).toFixed(2)}</td>
-              </tr>
+              <div key={person} className="bg-surface-container-low p-5 rounded-2xl border border-outline-variant/30 flex justify-between items-center shadow-sm">
+                <div>
+                  <p className="text-[11px] font-black uppercase text-on-surface-variant/40 tracking-widest mb-1">Person</p>
+                  <h4 className="font-bold text-on-surface">{person}</h4>
+                </div>
+                <div className="text-right">
+                  <p className="text-[11px] font-black uppercase text-primary/40 tracking-widest mb-1">Total</p>
+                  <p className="font-h2 text-primary font-black">₹{Number(total).toLocaleString()}</p>
+                </div>
+              </div>
             ))}
-            <tr className="bg-slate-50 dark:bg-slate-900/50 font-bold border-t-2 border-slate-300 dark:border-slate-600">
-              <td className="py-4 px-4 text-slate-800 dark:text-slate-100">Grand Total</td>
-              <td className="py-4 px-4 text-slate-800 dark:text-slate-100 text-lg">₹{Number(grandTotal).toFixed(2)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+            
+            <div className="bg-primary/5 p-5 rounded-2xl border-2 border-primary/20 flex justify-between items-center shadow-lg lg:col-span-1 shadow-primary/5">
+              <div>
+                <p className="text-[11px] font-black uppercase text-primary/60 tracking-widest mb-1 font-bold">Group Grand Total</p>
+                <h4 className="font-h2 text-primary font-black text-2xl tracking-tighter">₹{Number(grandTotal).toLocaleString()}</h4>
+              </div>
+              <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-on-primary">
+                <span className="material-symbols-outlined text-[28px]">payments</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

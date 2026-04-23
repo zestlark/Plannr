@@ -18,9 +18,24 @@ import { useState } from 'react';
 import { ItemCard } from './ItemCard';
 import { Item } from '@/types';
 
-export const Board = () => {
+interface BoardProps {
+  searchQuery?: string;
+  peopleFilter?: string[];
+}
+
+export const Board = ({ searchQuery = '', peopleFilter = [] }: BoardProps) => {
   const { categories, setCategories } = useAppStore();
   const [activeItem, setActiveItem] = useState<{ item: Item, categoryId: string } | null>(null);
+
+  const filteredCategories = categories.map(cat => ({
+    ...cat,
+    items: cat.items.filter(item => {
+      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                           cat.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesPerson = peopleFilter.length === 0 || peopleFilter.includes(item.person);
+      return matchesSearch && matchesPerson;
+    })
+  })).filter(cat => cat.items.length > 0 || (searchQuery === '' && peopleFilter.length === 0));
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -125,8 +140,8 @@ export const Board = () => {
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-wrap gap-6 w-full items-start pb-10">
-        {categories.map(category => (
+      <div className="flex flex-wrap md:flex-nowrap md:overflow-x-auto gap-6 w-full items-start pb-6 scrollbar-thin scrollbar-thumb-outline-variant hover:scrollbar-thumb-outline pt-2 px-1">
+        {filteredCategories.map(category => (
           <CategoryColumn key={category.id} category={category} />
         ))}
       </div>
