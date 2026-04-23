@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Villa Shopping Organizer</title>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+
+        <style>
+            :root {
+                --primary: #4f46e5;
+                --primary-hover: #4338ca;
+                --secondary: #64748b;
+                --success: #10b981;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+                --info: #0ea5e9;
+                --bg-color: #f1f5f9;
+                --surface: #ffffff;
+                --border: #e2e8f0;
+                --text-main: #0f172a;
+                --text-muted: #64748b;
+                --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+                --shadow-md:
+                    0 4px 6px -1px rgb(0 0 0 / 0.1),
+                    0 2px 4px -2px rgb(0 0 0 / 0.1);
+                --radius: 12px;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family:
+                    "Inter",
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Roboto,
+                    sans-serif;
+            }
+
+            body {
+                background: var(--bg-color);
+                color: var(--text-main);
+                padding: 20px;
+                line-height: 1.5;
+            }
+
+            .app-header {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+
+            .app-header h1 {
+                font-weight: 700;
+                font-size: 2rem;
+                color: var(--text-main);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+            }
+
+            /* --- TOOLBAR (CONTROLS) --- */
+            .toolbar {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 20px;
+                background: var(--surface);
+                padding: 20px;
+                border-radius: var(--radius);
+                box-shadow: var(--shadow-sm);
+                margin-bottom: 30px;
+                border: 1px solid var(--border);
+            }
+
+            .toolbar-group h3 {
+                font-size: 0.875rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: var(--text-muted);
+                margin-bottom: 12px;
+                font-weight: 600;
+            }
+
+            .input-row {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+
+            .button-row {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            /* --- INPUTS & BUTTONS --- */
+            input,
+            select,
+            textarea {
+                padding: 8px 12px;
+                border-radius: 8px;
+                border: 1px solid var(--border);
+                background: var(--surface);
+                color: var(--text-main);
+                outline: none;
+                transition:
+                    border-color 0.2s,
+                    box-shadow 0.2s;
+                font-size: 0.875rem;
+            }
+
+            input:focus,
+            select:focus,
+            textarea:focus {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            }
+
+            input {
+                flex: 1;
+            }
+
+            textarea {
+                width: 100%;
+                margin-bottom: 20px;
+                resize: vertical;
+                border-radius: var(--radius);
+            }
+
+            button {
+                padding: 8px 16px;
+                border: none;
+                border-radius: 8px;
+                font-weight: 500;
+                cursor: pointer;
+                font-size: 0.875rem;
+                transition: all 0.2s;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+            }
+
+            .btn-primary {
+                background: var(--primary);
+                color: white;
+            }
+            .btn-primary:hover {
+                background: var(--primary-hover);
+            }
+
+            .btn-success {
+                background: var(--success);
+                color: white;
+            }
+            .btn-success:hover {
+                filter: brightness(0.9);
+            }
+
+            .btn-warning {
+                background: var(--warning);
+                color: white;
+            }
+            .btn-warning:hover {
+                filter: brightness(0.9);
+            }
+
+            .btn-danger {
+                background: var(--danger);
+                color: white;
+            }
+            .btn-danger:hover {
+                filter: brightness(0.9);
+            }
+
+            .btn-info {
+                background: var(--info);
+                color: white;
+            }
+            .btn-info:hover {
+                filter: brightness(0.9);
+            }
+
+            .btn-outline {
+                background: transparent;
+                border: 1px solid var(--border);
+                color: var(--text-muted);
+                padding: 6px 12px;
+            }
+            .btn-outline:hover {
+                background: var(--bg-color);
+                color: var(--text-main);
+            }
+
+            /* --- PERSONS TAGS --- */
+            .persons-list {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .person-tag {
+                background: #e0e7ff;
+                color: #3730a3;
+                padding: 4px 12px;
+                border-radius: 999px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                transition: background 0.2s;
+            }
+            .person-tag:hover {
+                background: #c7d2fe;
+            }
+
+            /* --- GRID & COLUMNS --- */
+            .container {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+                gap: 24px;
+            }
+
+            .column {
+                background: var(--surface);
+                border-radius: var(--radius);
+                padding: 20px;
+                box-shadow: var(--shadow-sm);
+                border: 1px solid var(--border);
+                display: flex;
+                flex-direction: column;
+            }
+
+            .column-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .column-title {
+                font-weight: 600;
+                font-size: 1.125rem;
+                color: var(--text-main);
+            }
+
+            .column-actions {
+                display: flex;
+                gap: 6px;
+            }
+
+            .list {
+                flex: 1;
+                min-height: 50px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            /* --- DRAGGABLE ITEMS --- */
+            .item {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                padding: 14px;
+                border-radius: 10px;
+                cursor: grab;
+                transition:
+                    transform 0.2s,
+                    box-shadow 0.2s,
+                    border-color 0.2s;
+                position: relative;
+            }
+
+            .item:hover {
+                border-color: #cbd5e1;
+                box-shadow: var(--shadow-md);
+            }
+
+            .item.dragging {
+                opacity: 0.5;
+            }
+
+            .item-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-bottom: 10px;
+            }
+
+            .item-text {
+                font-weight: 600;
+                color: var(--text-main);
+                cursor: text;
+                word-break: break-word;
+            }
+            .item-text:hover {
+                color: var(--primary);
+            }
+
+            .delete-btn {
+                background: none;
+                border: none;
+                color: var(--text-muted);
+                cursor: pointer;
+                padding: 4px;
+                border-radius: 4px;
+                transition:
+                    color 0.2s,
+                    background 0.2s;
+                display: none; /* Hide by default, show on hover */
+            }
+            .item:hover .delete-btn {
+                display: block;
+            }
+            .delete-btn:hover {
+                color: var(--danger);
+                background: #fee2e2;
+            }
+
+            .item-controls {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+                align-items: center;
+            }
+
+            .input-group {
+                display: flex;
+                align-items: center;
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                padding: 0 8px;
+                background: var(--surface);
+            }
+
+            .input-group:focus-within {
+                border-color: var(--primary);
+            }
+
+            .price-input {
+                border: none;
+                width: 60px;
+                padding: 6px 4px;
+                font-size: 0.875rem;
+            }
+            .price-input:focus {
+                box-shadow: none;
+            }
+
+            .qty-group {
+                display: flex;
+                align-items: center;
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                overflow: hidden;
+            }
+
+            .qty-btn {
+                background: var(--bg-color);
+                border: none;
+                padding: 6px 10px;
+                color: var(--text-muted);
+                cursor: pointer;
+                transition:
+                    background 0.2s,
+                    color 0.2s;
+                font-weight: bold;
+            }
+            .qty-btn:hover {
+                background: #e2e8f0;
+                color: var(--text-main);
+            }
+
+            .qty {
+                min-width: 32px;
+                text-align: center;
+                font-weight: 500;
+                font-size: 0.875rem;
+                cursor: text;
+            }
+
+            select.unit,
+            select.personSelect {
+                padding: 6px 8px;
+                border: 1px solid var(--border);
+                border-radius: 6px;
+            }
+            select.personSelect {
+                flex: 1;
+                min-width: 90px;
+            }
+
+            /* --- SUMMARY SECTION --- */
+            .summary-section {
+                margin-top: 40px;
+                background: var(--surface);
+                padding: 24px;
+                border-radius: var(--radius);
+                box-shadow: var(--shadow-sm);
+                border: 1px solid var(--border);
+            }
+
+            .summary-section h2,
+            .summary-section h3 {
+                color: var(--text-main);
+                margin-bottom: 16px;
+                font-weight: 600;
+            }
+
+            .table-responsive {
+                overflow-x: auto;
+                margin-bottom: 24px;
+            }
+
+            .summary-table {
+                width: 100%;
+                border-collapse: collapse;
+                min-width: 600px; /* Ensures it scrolls on mobile */
+            }
+
+            .summary-table th,
+            .summary-table td {
+                padding: 12px 16px;
+                text-align: left;
+                border-bottom: 1px solid var(--border);
+                font-size: 0.875rem;
+            }
+
+            .summary-table th {
+                background: var(--bg-color);
+                font-weight: 600;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.05em;
+            }
+
+            .summary-table tbody tr:hover {
+                background: #f8fafc;
+            }
+
+            .total-row {
+                background: var(--bg-color) !important;
+                font-weight: 700;
+                font-size: 1rem !important;
+            }
+
+            .total-row td {
+                border-top: 2px solid var(--border);
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="app-header">
+            <h1>🛒 Villa Shopping Organizer</h1>
+        </div>
+
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <h3>👥 People</h3>
+                <div class="input-row">
+                    <input id="personInput" placeholder="Enter name" />
+                    <button onclick="addPerson()" class="btn-primary">
+                        Add
+                    </button>
+                </div>
+                <div id="personList" class="persons-list"></div>
+            </div>
+
+            <div class="toolbar-group">
+                <h3>📁 Categories</h3>
+                <div class="input-row">
+                    <input
+                        id="categoryInput"
+                        placeholder="Enter category name"
+                    />
+                    <button onclick="addCategory()" class="btn-primary">
+                        Add
+                    </button>
+                </div>
+            </div>
+
+            <div class="toolbar-group">
+                <h3>⚙️ Data & Tools</h3>
+                <div class="button-row">
+                    <button class="btn-info" onclick="sortAll()">
+                        Sort A-Z
+                    </button>
+                    <button class="btn-warning" onclick="exportData()">
+                        Export
+                    </button>
+                    <button class="btn-danger" onclick="importData()">
+                        Import
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <textarea
+            id="jsonBox"
+            rows="4"
+            placeholder="JSON Export/Import data will appear here..."
+        ></textarea>
+
+        <div class="container" id="container"></div>
+
+        <div
+            id="summarySection"
+            class="summary-section"
+            style="display: none"
+        ></div>
+
+        <script src="https://zestlark.github.io/z-notify/index.js"></script>
+
+        <script>
+            const notifyConfig = {
+                x: "end",
+                y: "top",
+                options: { timeout: 2000 },
+            };
+
+            const notification = new Notification(notifyConfig);
+
+            let draggedItem = null;
+
+            let persons = JSON.parse(localStorage.getItem("persons")) || [
+                "Deepak",
+            ];
+
+            function renderPersons() {
+                const list = document.getElementById("personList");
+                list.innerHTML = "";
+
+                persons.forEach((p) => {
+                    const el = document.createElement("div");
+                    el.className = "person-tag";
+                    el.innerHTML = `${p} <span style="font-size:14px;">&times;</span>`;
+                    el.title = "Click to remove";
+
+                    el.onclick = () => {
+                        persons = persons.filter((x) => x !== p);
+                        savePersons();
+                        renderPersons();
+                        saveData(); // trigger re-render of select dropdowns
+                        notification.success("Person Removed");
+                    };
+
+                    list.appendChild(el);
+                });
+            }
+
+            function addPerson() {
+                const input = document.getElementById("personInput");
+                const name = input.value.trim();
+                if (!name) return;
+
+                if (!persons.includes(name)) {
+                    persons.push(name);
+                    savePersons();
+                    renderPersons();
+                    saveData(); // update dropdowns
+                    notification.success("Person Added");
+                }
+                input.value = "";
+            }
+
+            function savePersons() {
+                localStorage.setItem("persons", JSON.stringify(persons));
+            }
+
+            function saveData() {
+                const data = [];
+
+                document.querySelectorAll(".column").forEach((col) => {
+                    const title =
+                        col.querySelector(".column-title").textContent;
+                    const items = [];
+
+                    col.querySelectorAll(".item").forEach((item) => {
+                        items.push({
+                            name: item.querySelector(".item-text").textContent,
+                            qty: item.querySelector(".qty").textContent,
+                            unit: item.querySelector(".unit").value,
+                            person: item.querySelector(".personSelect").value,
+                            price: item.querySelector(".price-input").value,
+                        });
+                    });
+
+                    data.push({ title, items });
+                });
+
+                localStorage.setItem("villaShopping", JSON.stringify(data));
+                updateSummary(data);
+                updateDropdowns(); // Keep dropdowns synced with persons array
+            }
+
+            function updateDropdowns() {
+                document.querySelectorAll(".personSelect").forEach((select) => {
+                    const currentVal = select.value;
+                    select.innerHTML = '<option value="">Unassigned</option>';
+                    persons.forEach((p) => {
+                        const opt = document.createElement("option");
+                        opt.value = p;
+                        opt.textContent = p;
+                        select.appendChild(opt);
+                    });
+                    if (persons.includes(currentVal)) {
+                        select.value = currentVal;
+                    }
+                });
+            }
+
+            function loadData() {
+                const saved = localStorage.getItem("villaShopping");
+                if (!saved) return;
+
+                const data = JSON.parse(saved);
+                container.innerHTML = "";
+
+                data.forEach((cat) => {
+                    const column = createCategory(cat.title);
+                    container.appendChild(column);
+
+                    const list = column.querySelector(".list");
+
+                    cat.items.forEach((item) => {
+                        addItem(
+                            list,
+                            item.name,
+                            item.qty,
+                            item.unit,
+                            item.person,
+                            item.price,
+                        );
+                    });
+                });
+
+                updateSummary(data);
+            }
+
+            function updateSummary(data) {
+                const summaryDiv = document.getElementById("summarySection");
+
+                if (!data || data.length === 0) {
+                    summaryDiv.style.display = "none";
+                    return;
+                }
+
+                summaryDiv.style.display = "block";
+
+                let html = `<h2>📊 Shopping & Payment Summary</h2>
+                <div class="table-responsive">
+                    <table class="summary-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price/Unit</th>
+                                <th>Qty</th>
+                                <th>Assigned To</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+                let personTotals = {};
+                let grandTotal = 0;
+
+                data.forEach((cat) => {
+                    cat.items.forEach((item) => {
+                        let p = parseFloat(item.price) || 0;
+                        let q = parseFloat(item.qty) || 0;
+                        let t = p * q;
+                        let person = item.person || "Unassigned";
+
+                        personTotals[person] = (personTotals[person] || 0) + t;
+                        grandTotal += t;
+
+                        html += `<tr>
+                            <td>
+                                <span style="font-weight:500">${item.name}</span>
+                                <span style="color:var(--text-muted);font-size:12px;margin-left:4px;">(${cat.title})</span>
+                            </td>
+                            <td>₹${p.toFixed(2)}</td>
+                            <td>${item.qty} ${item.unit}</td>
+                            <td><span style="background:#e2e8f0;padding:2px 8px;border-radius:12px;font-size:12px;">${person}</span></td>
+                            <td style="font-weight:500">₹${t.toFixed(2)}</td>
+                        </tr>`;
+                    });
+                });
+
+                html += `</tbody></table></div>`;
+
+                let totalsHtml = `<h3 style="margin-top: 30px;">💰 Total to Pay by Person</h3>
+                <div class="table-responsive" style="max-width: 500px;">
+                    <table class="summary-table">
+                        <thead>
+                            <tr><th>Person</th><th>Amount to Pay</th></tr>
+                        </thead>
+                        <tbody>`;
+
+                for (let person in personTotals) {
+                    totalsHtml += `<tr>
+                        <td><strong>${person}</strong></td>
+                        <td style="font-weight:500; color:var(--text-main);">₹${personTotals[person].toFixed(2)}</td>
+                    </tr>`;
+                }
+
+                totalsHtml += `<tr class="total-row">
+                    <td>Grand Total</td>
+                    <td>₹${grandTotal.toFixed(2)}</td>
+                </tr>
+                </tbody></table></div>`;
+
+                summaryDiv.innerHTML = html + totalsHtml;
+            }
+
+            function exportData() {
+                saveData();
+
+                const data = {
+                    persons,
+                    categories: JSON.parse(
+                        localStorage.getItem("villaShopping"),
+                    ),
+                };
+
+                jsonBox.value = JSON.stringify(data, null, 2);
+                notification.success("Export Ready");
+            }
+
+            function importData() {
+                try {
+                    const data = JSON.parse(jsonBox.value);
+
+                    persons = data.persons || persons;
+                    savePersons();
+
+                    localStorage.setItem(
+                        "villaShopping",
+                        JSON.stringify(data.categories),
+                    );
+
+                    renderPersons();
+                    loadData();
+
+                    notification.success("Imported Successfully");
+                    jsonBox.value = "";
+                } catch {
+                    notification.success("Invalid JSON");
+                }
+            }
+
+            function createCategory(name) {
+                const column = document.createElement("div");
+                column.className = "column";
+
+                column.innerHTML = `
+                <div class="column-header">
+                    <span class="column-title">${name}</span>
+                    <div class="column-actions">
+                        <button class="btn-outline" title="Rename Category">✏️</button>
+                        <button class="btn-outline copy-cat" title="Copy Text">📋</button>
+                    </div>
+                </div>
+
+                <div class="input-row" style="margin-bottom: 16px;">
+                    <input placeholder="Add new item..."/>
+                    <button class="btn-primary">Add</button>
+                </div>
+
+                <div class="list"></div>
+                `;
+
+                const input = column.querySelector("input");
+                const list = column.querySelector(".list");
+
+                // Enter key support for quick add
+                input.addEventListener("keypress", function (event) {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        column.querySelector(".btn-primary").click();
+                    }
+                });
+
+                list.addEventListener("dragover", (e) => e.preventDefault());
+
+                list.addEventListener("drop", (e) => {
+                    e.preventDefault();
+
+                    const afterElement = getDragAfterElement(list, e.clientY);
+
+                    if (afterElement == null) {
+                        list.appendChild(draggedItem);
+                    } else {
+                        list.insertBefore(draggedItem, afterElement);
+                    }
+
+                    saveData();
+                });
+
+                column.querySelector(".btn-primary").onclick = () => {
+                    if (!input.value) return;
+                    addItem(list, input.value);
+                    input.value = "";
+                    saveData();
+                };
+
+                // Rename Button
+                column.querySelector(
+                    ".column-actions button:first-child",
+                ).onclick = () => {
+                    const newName = prompt("Rename Category", name);
+                    if (newName && newName.trim() !== "") {
+                        column.querySelector(".column-title").textContent =
+                            newName.trim();
+                        saveData();
+                        notification.success("Renamed");
+                    }
+                };
+
+                // Copy Button
+                column.querySelector(".copy-cat").onclick = () => {
+                    const title =
+                        column.querySelector(".column-title").textContent;
+                    copyCategory(title, list);
+                };
+
+                return column;
+            }
+
+            function addItem(
+                list,
+                text,
+                qtyVal = 1,
+                unitVal = "pcs",
+                personVal = "",
+                priceVal = "",
+            ) {
+                const item = document.createElement("div");
+                item.className = "item";
+                item.draggable = true;
+
+                item.innerHTML = `
+                <div class="item-header">
+                    <span class="item-text" title="Double click to edit">${text}</span>
+                    <button class="delete-btn delete" title="Delete item">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                    </button>
+                </div>
+
+                <div class="item-controls">
+                    <div class="input-group">
+                        <span style="color:var(--text-muted); font-weight:500; font-size:13px;">₹</span>
+                        <input type="number" class="price-input" placeholder="Price" value="${priceVal}" min="0" step="0.01">
+                    </div>
+
+                    <div class="qty-group">
+                        <button class="qty-btn minus">-</button>
+                        <span class="qty" title="Double click to edit">${qtyVal}</span>
+                        <button class="qty-btn plus">+</button>
+                    </div>
+
+                    <select class="unit">
+                        <option>pcs</option>
+                        <option>kg</option>
+                        <option>ltr</option>
+                        <option>pack</option>
+                        <option>gm</option>
+                    </select>
+
+                    <select class="personSelect">
+                        <option value="">Unassigned</option>
+                    </select>
+                </div>
+                `;
+
+                // Populate Dropdown for this specific item
+                const personSelect = item.querySelector(".personSelect");
+                persons.forEach((p) => {
+                    const opt = document.createElement("option");
+                    opt.value = p;
+                    opt.textContent = p;
+                    personSelect.appendChild(opt);
+                });
+                personSelect.value = personVal;
+
+                // Drag Events
+                item.addEventListener("dragstart", () => {
+                    draggedItem = item;
+                    item.classList.add("dragging");
+                    // setTimeout prevents the element from disappearing instantly on drag
+                    setTimeout(() => (item.style.display = "none"), 0);
+                });
+
+                item.addEventListener("dragend", () => {
+                    setTimeout(() => (item.style.display = "block"), 0);
+                    item.classList.remove("dragging");
+                    draggedItem = null;
+                    saveData();
+                });
+
+                // Edit Item Name
+                const itemText = item.querySelector(".item-text");
+                itemText.ondblclick = () => {
+                    const newText = prompt(
+                        "Edit item name",
+                        itemText.textContent,
+                    );
+                    if (newText && newText.trim() !== "") {
+                        itemText.textContent = newText.trim();
+                        saveData();
+                        notification.success("Item Updated");
+                    }
+                };
+
+                // Triggers summary update on price/person change
+                item.querySelector(".price-input").addEventListener(
+                    "input",
+                    saveData,
+                );
+                personSelect.addEventListener("change", saveData);
+                item.querySelector(".unit").addEventListener(
+                    "change",
+                    saveData,
+                );
+
+                const qty = item.querySelector(".qty");
+                const unit = item.querySelector(".unit");
+
+                function allowDecimal() {
+                    return ["kg", "ltr", "gm"].includes(unit.value);
+                }
+
+                item.querySelector(".minus").onclick = () => {
+                    let val = parseFloat(qty.textContent);
+                    val -= allowDecimal() ? 0.5 : 1;
+                    if (val <= 0) val = 1; // Minimum 1 for non-decimals, handles 0 for decimals
+                    qty.textContent = val;
+                    saveData();
+                };
+
+                item.querySelector(".plus").onclick = () => {
+                    let val = parseFloat(qty.textContent);
+                    val += allowDecimal() ? 0.5 : 1;
+                    qty.textContent = val;
+                    saveData();
+                };
+
+                // Edit Qty Manually
+                qty.ondblclick = () => {
+                    const val = prompt(
+                        "Enter precise quantity",
+                        qty.textContent,
+                    );
+                    if (val && !isNaN(parseFloat(val))) {
+                        qty.textContent = parseFloat(val);
+                        saveData();
+                    }
+                };
+
+                // Delete Item
+                item.querySelector(".delete").onclick = () => {
+                    item.remove();
+                    saveData();
+                };
+
+                list.appendChild(item);
+            }
+
+            function copyCategory(name, list) {
+                sortAll();
+
+                let text = `🛒 *${name}*\n\n`;
+                const grouped = {};
+
+                list.querySelectorAll(".item").forEach((item) => {
+                    const itemName = item
+                        .querySelector(".item-text")
+                        .textContent.trim();
+                    const qty = item.querySelector(".qty").textContent.trim();
+                    const unit = item.querySelector(".unit").value.trim();
+                    const price =
+                        parseFloat(item.querySelector(".price-input").value) ||
+                        0;
+                    const total = price * parseFloat(qty);
+                    const person =
+                        item.querySelector(".personSelect").value ||
+                        "Unassigned";
+
+                    if (!grouped[person]) grouped[person] = [];
+
+                    let lineStr = `• ${itemName} - ${qty} ${unit}`;
+                    if (price > 0) lineStr += ` (₹${total.toFixed(2)})`;
+                    grouped[person].push(lineStr);
+                });
+
+                Object.keys(grouped).forEach((person, index) => {
+                    text += `👤 *${person}*\n`;
+
+                    grouped[person].forEach((line) => {
+                        text += `${line}\n`;
+                    });
+
+                    if (index !== Object.keys(grouped).length - 1) {
+                        text += `\n---\n\n`;
+                    }
+                });
+
+                navigator.clipboard.writeText(text);
+                notification.success("Copied to clipboard");
+            }
+
+            function addCategory() {
+                const input = document.getElementById("categoryInput");
+                const name = input.value.trim();
+                if (!name) return;
+
+                container.appendChild(createCategory(name));
+                input.value = "";
+
+                saveData();
+                notification.success("Category Added");
+            }
+
+            // Enter key support for top-level inputs
+            document
+                .getElementById("personInput")
+                .addEventListener("keypress", function (e) {
+                    if (e.key === "Enter") addPerson();
+                });
+            document
+                .getElementById("categoryInput")
+                .addEventListener("keypress", function (e) {
+                    if (e.key === "Enter") addCategory();
+                });
+
+            function sortAll() {
+                document.querySelectorAll(".column").forEach((column) => {
+                    const list = column.querySelector(".list");
+                    const items = [...list.children];
+
+                    items.sort((a, b) => {
+                        const pA = (
+                            a.querySelector(".personSelect").value || ""
+                        ).toLowerCase();
+                        const pB = (
+                            b.querySelector(".personSelect").value || ""
+                        ).toLowerCase();
+
+                        if (pA < pB) return -1;
+                        if (pA > pB) return 1;
+
+                        const nA = a
+                            .querySelector(".item-text")
+                            .textContent.toLowerCase();
+                        const nB = b
+                            .querySelector(".item-text")
+                            .textContent.toLowerCase();
+
+                        return nA.localeCompare(nB);
+                    });
+
+                    items.forEach((i) => list.appendChild(i));
+                });
+
+                saveData();
+                notification.success("Items Sorted");
+            }
+
+            function getDragAfterElement(container, y) {
+                const draggableElements = [
+                    ...container.querySelectorAll(".item:not(.dragging)"),
+                ];
+
+                return draggableElements.reduce(
+                    (closest, child) => {
+                        const box = child.getBoundingClientRect();
+                        const offset = y - box.top - box.height / 2;
+
+                        if (offset < 0 && offset > closest.offset) {
+                            return { offset: offset, element: child };
+                        } else {
+                            return closest;
+                        }
+                    },
+                    { offset: Number.NEGATIVE_INFINITY },
+                ).element;
+            }
+
+            const container = document.getElementById("container");
+
+            renderPersons();
+            loadData();
+        </script>
+    </body>
+</html>
