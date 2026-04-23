@@ -141,6 +141,43 @@
                 cursor: pointer;
                 font-size: 12px;
             }
+
+            /* --- NEW STYLES FOR PRICING AND SUMMARY --- */
+            .price-input {
+                width: 70px;
+            }
+
+            .summary-section {
+                margin-top: 30px;
+                background: white;
+                padding: 20px;
+                border-radius: 16px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            }
+
+            .summary-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 15px;
+            }
+
+            .summary-table th,
+            .summary-table td {
+                border: 1px solid #e5e7eb;
+                padding: 10px;
+                text-align: left;
+                font-size: 14px;
+            }
+
+            .summary-table th {
+                background: #f8fafc;
+                font-weight: 600;
+            }
+
+            .total-row {
+                background: #f1f5f9;
+                font-weight: bold;
+            }
         </style>
     </head>
 
@@ -164,6 +201,12 @@
         <textarea id="jsonBox" rows="4"></textarea>
 
         <div class="container" id="container"></div>
+
+        <div
+            id="summarySection"
+            class="summary-section"
+            style="display: none"
+        ></div>
 
         <script src="https://zestlark.github.io/z-notify/index.js"></script>
 
@@ -223,7 +266,6 @@
 
                 document.querySelectorAll(".column").forEach((col) => {
                     const title = col.querySelector(".title").textContent;
-
                     const items = [];
 
                     col.querySelectorAll(".item").forEach((item) => {
@@ -232,6 +274,7 @@
                             qty: item.querySelector(".qty").textContent,
                             unit: item.querySelector(".unit").value,
                             person: item.querySelector(".personSelect").value,
+                            price: item.querySelector(".price-input").value, // Saved price
                         });
                     });
 
@@ -239,6 +282,7 @@
                 });
 
                 localStorage.setItem("villaShopping", JSON.stringify(data));
+                updateSummary(data); // Update table dynamically
             }
 
             function loadData() {
@@ -261,9 +305,84 @@
                             item.qty,
                             item.unit,
                             item.person,
+                            item.price, // Pass price
                         );
                     });
                 });
+
+                updateSummary(data);
+            }
+
+            // Renders bottom summary table dynamically
+            function updateSummary(data) {
+                const summaryDiv = document.getElementById("summarySection");
+
+                if (!data || data.length === 0) {
+                    summaryDiv.style.display = "none";
+                    return;
+                }
+
+                summaryDiv.style.display = "block";
+
+                let html = `<h2>📊 Shopping & Payment Summary</h2>
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Price/Unit</th>
+                            <th>Qty</th>
+                            <th>Assigned To</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+                let personTotals = {};
+                let grandTotal = 0;
+
+                data.forEach((cat) => {
+                    cat.items.forEach((item) => {
+                        let p = parseFloat(item.price) || 0;
+                        let q = parseFloat(item.qty) || 0;
+                        let t = p * q;
+                        let person = item.person || "Unassigned";
+
+                        personTotals[person] = (personTotals[person] || 0) + t;
+                        grandTotal += t;
+
+                        html += `<tr>
+                            <td>${item.name} <span style="color:#9ca3af;font-size:12px;">(${cat.title})</span></td>
+                            <td>₹${p.toFixed(2)}</td>
+                            <td>${item.qty} ${item.unit}</td>
+                            <td>${person}</td>
+                            <td>₹${t.toFixed(2)}</td>
+                        </tr>`;
+                    });
+                });
+
+                html += `</tbody></table>`;
+
+                let totalsHtml = `<h3 style="margin-top: 25px;">💰 Total to Pay by Person</h3>
+                <table class="summary-table" style="max-width: 400px;">
+                    <thead>
+                        <tr><th>Person</th><th>Amount to Pay</th></tr>
+                    </thead>
+                    <tbody>`;
+
+                for (let person in personTotals) {
+                    totalsHtml += `<tr>
+                        <td><strong>${person}</strong></td>
+                        <td>₹${personTotals[person].toFixed(2)}</td>
+                    </tr>`;
+                }
+
+                totalsHtml += `<tr class="total-row">
+                    <td>Grand Total</td>
+                    <td>₹${grandTotal.toFixed(2)}</td>
+                </tr>
+                </tbody></table>`;
+
+                summaryDiv.innerHTML = html + totalsHtml;
             }
 
             function exportData() {
@@ -306,21 +425,21 @@
                 column.className = "column";
 
                 column.innerHTML = `
-<div class="header">
-<span class="title">${name}</span>
-<div>
-<button class="rename-btn">Rename</button>
-<button class="copy-btn">Copy</button>
-</div>
-</div>
+                <div class="header">
+                    <span class="title">${name}</span>
+                    <div>
+                        <button class="rename-btn">Rename</button>
+                        <button class="copy-btn">Copy</button>
+                    </div>
+                </div>
 
-<div class="add-section">
-<input placeholder="Add item"/>
-<button>Add</button>
-</div>
+                <div class="add-section">
+                    <input placeholder="Add item"/>
+                    <button>Add</button>
+                </div>
 
-<div class="list"></div>
-`;
+                <div class="list"></div>
+                `;
 
                 const input = column.querySelector("input");
                 const list = column.querySelector(".list");
@@ -371,40 +490,43 @@
                 qtyVal = 1,
                 unitVal = "pcs",
                 personVal = "",
+                priceVal = "",
             ) {
                 const item = document.createElement("div");
                 item.className = "item";
                 item.draggable = true;
 
                 item.innerHTML = `
-<div class="delete">✕</div>
+                <div class="delete">✕</div>
 
-<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
-<span class="item-text" style="cursor:pointer">${text}</span>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <span class="item-text" style="cursor:pointer;font-weight:500;">${text}</span>
 
-<div style="display:flex;gap:10px;align-items:center">
+                    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:4px;">
 
-<button class="minus">-</button>
+                        <div style="display:flex;align-items:center;gap:4px;">
+                            <span style="font-size:13px;color:#6b7280">₹</span>
+                            <input type="number" class="price-input" placeholder="Price" value="${priceVal}" min="0" step="0.01">
+                        </div>
 
-<span class="qty" style="min-width:28px;text-align:center;cursor:pointer">
-${qtyVal}
-</span>
+                        <div style="display:flex;align-items:center;gap:4px;">
+                            <button class="minus" style="padding:2px 8px;">-</button>
+                            <span class="qty" style="min-width:28px;text-align:center;cursor:pointer">${qtyVal}</span>
+                            <button class="plus" style="padding:2px 8px;">+</button>
+                        </div>
 
-<button class="plus">+</button>
+                        <select class="unit">
+                            <option>pcs</option>
+                            <option>kg</option>
+                            <option>ltr</option>
+                            <option>pack</option>
+                            <option>gm</option>
+                        </select>
 
-<select class="unit">
-<option>pcs</option>
-<option>kg</option>
-<option>ltr</option>
-<option>pack</option>
-<option>gm</option>
-</select>
-
-<select class="personSelect"></select>
-
-</div>
-</div>
-`;
+                        <select class="personSelect"></select>
+                    </div>
+                </div>
+                `;
 
                 item.addEventListener("dragstart", () => {
                     draggedItem = item;
@@ -429,6 +551,12 @@ ${qtyVal}
                     saveData();
                     notification.success("Item Updated");
                 };
+
+                // Add listener to recalculate summary when price changes
+                item.querySelector(".price-input").addEventListener(
+                    "input",
+                    saveData,
+                );
 
                 const qty = item.querySelector(".qty");
                 const unit = item.querySelector(".unit");
@@ -460,6 +588,7 @@ ${qtyVal}
                 };
 
                 const personSelect = item.querySelector(".personSelect");
+                personSelect.addEventListener("change", saveData);
 
                 const none = document.createElement("option");
                 none.value = "";
@@ -488,7 +617,6 @@ ${qtyVal}
                 sortAll();
 
                 let text = `🛒 ${name}\n\n`;
-
                 const grouped = {};
 
                 list.querySelectorAll(".item").forEach((item) => {
@@ -497,13 +625,19 @@ ${qtyVal}
                         .textContent.trim();
                     const qty = item.querySelector(".qty").textContent.trim();
                     const unit = item.querySelector(".unit").value.trim();
+                    const price =
+                        parseFloat(item.querySelector(".price-input").value) ||
+                        0;
+                    const total = price * parseFloat(qty);
                     const person =
                         item.querySelector(".personSelect").value ||
                         "Unassigned";
 
                     if (!grouped[person]) grouped[person] = [];
 
-                    grouped[person].push(`• ${itemName} - ${qty} ${unit}`);
+                    let lineStr = `• ${itemName} - ${qty} ${unit}`;
+                    if (price > 0) lineStr += ` (₹${total.toFixed(2)})`;
+                    grouped[person].push(lineStr);
                 });
 
                 Object.keys(grouped).forEach((person, index) => {
@@ -519,7 +653,6 @@ ${qtyVal}
                 });
 
                 navigator.clipboard.writeText(text);
-
                 notification.success("Copied");
             }
 
