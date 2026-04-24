@@ -53,7 +53,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   // Initial Fetch: Plans
   useEffect(() => {
-    fetchPlans();
+    const init = async () => {
+      await fetchPlans();
+      setInitialLoading(false);
+    };
+    init();
     
     // Realtime for plans
     const planSub = supabase
@@ -84,7 +88,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setPersons([]);
       setCategories([]);
-      setInitialLoading(false);
+      // We don't set initialLoading to false here because fetchPlans might still be running
+      // and PlansView needs to know if it's done.
     }
   }, [currentPlanId]);
 

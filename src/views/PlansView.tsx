@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export const PlansView = () => {
-  const { plans, addPlan, deletePlan, setCurrentPlanId, renamePlan } = useAppStore();
+  const { plans, addPlan, deletePlan, setCurrentPlanId, renamePlan, loading, initialLoading } = useAppStore();
   const [newPlanTitle, setNewPlanTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -32,6 +32,14 @@ export const PlansView = () => {
     }
     setEditingId(null);
   };
+
+  if (initialLoading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-[100]">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-gutter animate-in fade-in duration-500">
