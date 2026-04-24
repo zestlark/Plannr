@@ -1,27 +1,49 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { CategoryColumn } from './CategoryColumn';
 import { useAppStore } from '@/store/AppContext';
+
+// Mock dnd-kit hooks
+vi.mock('@dnd-kit/sortable', () => ({
+  useSortable: () => ({
+    attributes: {},
+    listeners: {},
+    setNodeRef: vi.fn(),
+    transform: null,
+    transition: null,
+  }),
+  SortableContext: ({ children }: any) => <div>{children}</div>,
+  verticalListSortingStrategy: {},
+}));
+
+vi.mock('@dnd-kit/core', () => ({
+  useDroppable: () => ({
+    setNodeRef: vi.fn(),
+    isOver: false,
+  }),
+}));
 
 vi.mock('@/store/AppContext', () => ({
   useAppStore: vi.fn(),
 }));
 
 describe('CategoryColumn', () => {
-  const mockCategory = {
+  const category = {
     id: 'c1',
-    title: 'Grocery',
-    items: [{ id: 'i1', name: 'Milk', qty: 1, unit: 'pcs', person: 'Alice', price: 10 }],
+    title: 'Groceries',
+    items: [
+      { id: 'i1', name: 'Milk', qty: 1, unit: 'pcs', person: '', price: 10 }
+    ]
   };
 
   const mockStore = {
     persons: ['Alice'],
+    addItem: vi.fn(),
+    deleteCategory: vi.fn(),
+    renameCategory: vi.fn(),
+    copyCategoryToClipboard: vi.fn(),
     updateItem: vi.fn(),
     deleteItem: vi.fn(),
-    addItem: vi.fn(),
-    renameCategory: vi.fn(),
-    deleteCategory: vi.fn(),
-    copyCategoryToClipboard: vi.fn(),
   };
 
   beforeEach(() => {
@@ -29,9 +51,25 @@ describe('CategoryColumn', () => {
     (useAppStore as any).mockReturnValue(mockStore);
   });
 
-  it('renders title and items', () => {
-    render(<CategoryColumn category={mockCategory as any} />);
-    expect(screen.getByText('Grocery')).toBeInTheDocument();
-    expect(screen.getByText('Milk')).toBeInTheDocument();
+  it('renders category title and items', () => {
+    render(<CategoryColumn category={category as any} />);
+    expect(screen.getByText('Groceries')).toBeInTheDocument();
+  });
+
+  it('handles renaming category', () => {
+    render(<CategoryColumn category={category as any} />);
+    fireEvent.click(screen.getByTitle('Rename'));
+    const input = screen.getByDisplayValue('Groceries');
+    fireEvent.change(input, { target: { value: 'Food' } });
+    fireEvent.click(screen.getByText('check').closest('button')!);
+    expect(mockStore.renameCategory).toHaveBeenCalledWith('c1', 'Food');
+  });
+
+  it('handles category deletion with confirmation', () => {
+    render(<CategoryColumn category={category as any} />);
+    fireEvent.click(screen.getByTitle('Delete Category'));
+    expect(screen.getByText(/Delete Category\?/)).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Confirm'));
+    expect(mockStore.deleteCategory).toHaveBeenCalledWith('c1');
   });
 });
