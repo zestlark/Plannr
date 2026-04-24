@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useOutletContext } from 'react-router-dom';
+import { HashRouter, Routes, Route, useOutletContext } from 'react-router-dom';
 import { AppProvider } from '@/store/AppContext';
 import { MainLayout } from '@/components/Navigation/MainLayout';
 import { DashboardView } from '@/views/DashboardView';
@@ -15,7 +15,7 @@ function DashboardRoute() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AppProvider>
         <Routes>
           <Route path="/" element={<MainLayout />}>
@@ -33,7 +33,7 @@ function App() {
           theme="light"
         />
       </AppProvider>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
