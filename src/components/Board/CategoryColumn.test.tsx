@@ -27,6 +27,11 @@ vi.mock('@/store/AppContext', () => ({
   useAppStore: vi.fn(),
 }));
 
+vi.mock('./ItemCard', () => ({
+  ItemCard: ({ item }: any) => <div data-testid="item-card">{item.name}</div>,
+}));
+
+
 describe('CategoryColumn', () => {
   const category = {
     id: 'c1',
@@ -65,11 +70,70 @@ describe('CategoryColumn', () => {
     expect(mockStore.renameCategory).toHaveBeenCalledWith('c1', 'Food');
   });
 
+  it('handles renaming category via Enter key', () => {
+    render(<CategoryColumn category={category as any} />);
+    fireEvent.click(screen.getByTitle('Rename'));
+    const input = screen.getByDisplayValue('Groceries');
+    fireEvent.change(input, { target: { value: 'Food' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(mockStore.renameCategory).toHaveBeenCalledWith('c1', 'Food');
+  });
+
+  it('cancels renaming category via Escape key', () => {
+    render(<CategoryColumn category={category as any} />);
+    fireEvent.click(screen.getByTitle('Rename'));
+    const input = screen.getByDisplayValue('Groceries');
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(screen.queryByDisplayValue('Groceries')).not.toBeInTheDocument();
+    expect(screen.getByText('Groceries')).toBeInTheDocument();
+  });
+
   it('handles category deletion with confirmation', () => {
     render(<CategoryColumn category={category as any} />);
     fireEvent.click(screen.getByTitle('Delete Category'));
     expect(screen.getByText(/Delete Category\?/)).toBeInTheDocument();
     fireEvent.click(screen.getByText('Confirm'));
     expect(mockStore.deleteCategory).toHaveBeenCalledWith('c1');
+  });
+
+  it('cancels category deletion', () => {
+    render(<CategoryColumn category={category as any} />);
+    fireEvent.click(screen.getByTitle('Delete Category'));
+    expect(screen.getByText(/Delete Category\?/)).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Cancel'));
+    expect(screen.queryByText(/Delete Category\?/)).not.toBeInTheDocument();
+  });
+
+  it('handles copying category', () => {
+    render(<CategoryColumn category={category as any} />);
+    fireEvent.click(screen.getByTitle('Copy Category'));
+    expect(mockStore.copyCategoryToClipboard).toHaveBeenCalledWith('c1');
+  });
+
+  it('handles adding an item', () => {
+    render(<CategoryColumn category={category as any} />);
+    const input = screen.getByPlaceholderText('What to buy?');
+    
+    // Type in input
+    fireEvent.change(input, { target: { value: 'Eggs' } });
+    
+    // Click add button
+    const addBtn = screen.getByText('add').closest('button')!;
+    fireEvent.click(addBtn);
+    
+    expect(mockStore.addItem).toHaveBeenCalledWith('c1', 'Eggs', 'pcs');
+    expect(input).toHaveValue('');
+  });
+
+  it('handles adding an item via Enter key', () => {
+    render(<CategoryColumn category={category as any} />);
+    const input = screen.getByPlaceholderText('What to buy?');
+    
+    // Type in input and hit Enter
+    fireEvent.change(input, { target: { value: 'Eggs' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    
+    expect(mockStore.addItem).toHaveBeenCalledWith('c1', 'Eggs', 'pcs');
+    expect(input).toHaveValue('');
   });
 });

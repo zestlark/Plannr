@@ -112,4 +112,32 @@ describe('ItemCard', () => {
     fireEvent.click(deleteBtn);
     expect(mockStore.deleteItem).toHaveBeenCalledWith('c1', 'i1');
   });
+
+  it('stops pointer down propagation on interactive elements', () => {
+    const parentPointerDown = vi.fn();
+    render(
+      <div onPointerDown={parentPointerDown}>
+        <ItemCard item={item as any} categoryId="c1" />
+      </div>
+    );
+    
+    const elements = [
+      screen.getByTitle('Delete Item'),
+      screen.getByText('remove').closest('button')!,
+      screen.getByText('add').closest('button')!,
+      screen.getByDisplayValue('10'), // price input
+      screen.getByTitle('Alice'), // person select
+      screen.getByDisplayValue('PCS') // unit select
+    ];
+
+    elements.forEach(el => {
+      fireEvent.pointerDown(el);
+      expect(parentPointerDown).not.toHaveBeenCalled();
+    });
+    
+    // Just to verify the parent actually catches other pointer downs
+    fireEvent.pointerDown(screen.getByText('Milk'));
+    expect(parentPointerDown).toHaveBeenCalled();
+  });
 });
+
