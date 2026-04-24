@@ -1,4 +1,4 @@
-
+import { useAppStore } from '@/store/AppContext';
 
 interface TopNavBarProps {
   onMenuToggle?: () => void;
@@ -7,6 +7,7 @@ interface TopNavBarProps {
 }
 
 export const TopNavBar = ({ onMenuToggle, searchQuery, setSearchQuery }: TopNavBarProps) => {
+  const { activePlan } = useAppStore();
 
   return (
     <header className="flex justify-between items-center w-full px-gutter md:px-xl h-20 sticky top-0 z-40 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/50 shrink-0 shadow-sm">
@@ -21,10 +22,10 @@ export const TopNavBar = ({ onMenuToggle, searchQuery, setSearchQuery }: TopNavB
         
         {/* Page Context (Static for now since it's a simple app) */}
         <div className="hidden sm:flex flex-col">
-          <h1 className="text-on-surface font-bold text-lg tracking-tight">Shopping Manager</h1>
+          <h1 className="text-on-surface font-bold text-lg tracking-tight uppercase">{activePlan?.title || 'Plannr'}</h1>
           <div className="flex items-center gap-sm">
-            <div className="w-2 h-2 rounded-full bg-primary/40 animate-pulse" />
-            <span className="text-[10px] uppercase tracking-widest font-black text-on-surface-variant/60">Local Storage Active</span>
+            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-[10px] uppercase tracking-widest font-black text-primary/80">Supabase Cloud Active</span>
           </div>
         </div>
       </div>

@@ -16,7 +16,7 @@ import {
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useState } from 'react';
 import { ItemCard } from './ItemCard';
-import { Item } from '@/types';
+import { Item, Category } from '@/types';
 
 interface BoardProps {
   searchQuery?: string;
@@ -24,7 +24,7 @@ interface BoardProps {
 }
 
 export const Board = ({ searchQuery = '', peopleFilter = [] }: BoardProps) => {
-  const { categories, setCategories } = useAppStore();
+  const { categories, setCategories, moveItem } = useAppStore();
   const [activeItem, setActiveItem] = useState<{ item: Item, categoryId: string } | null>(null);
 
   const filteredCategories = categories.map(cat => ({
@@ -68,9 +68,9 @@ export const Board = ({ searchQuery = '', peopleFilter = [] }: BoardProps) => {
     const overCategory = categories[overCategoryIndex];
     if (!overCategory) return;
 
-    // Moving between different categories
     if (activeCategory.id !== overCategory.id) {
-      setCategories(prev => {
+      moveItem(activeId as string, overCategory.id);
+      setCategories((prev: Category[]) => {
         const newCats = [...prev];
         const aCatIdx = newCats.findIndex(c => c.id === activeCategory.id);
         const oCatIdx = newCats.findIndex(c => c.id === overCategory.id);
@@ -78,10 +78,10 @@ export const Board = ({ searchQuery = '', peopleFilter = [] }: BoardProps) => {
         const aItems = [...newCats[aCatIdx].items];
         const oItems = [...newCats[oCatIdx].items];
         
-        const activeItemIndex = aItems.findIndex(i => i.id === activeId);
+        const activeItemIndex = aItems.findIndex(i => (i as Item).id === activeId);
         const [movedItem] = aItems.splice(activeItemIndex, 1);
         
-        const overItemIndex = overData?.type === 'Item' ? oItems.findIndex(i => i.id === overId) : oItems.length;
+        const overItemIndex = overData?.type === 'Item' ? oItems.findIndex(i => (i as Item).id === overId) : oItems.length;
         oItems.splice(overItemIndex >= 0 ? overItemIndex : oItems.length, 0, movedItem);
 
         newCats[aCatIdx] = { ...newCats[aCatIdx], items: aItems };
@@ -116,11 +116,11 @@ export const Board = ({ searchQuery = '', peopleFilter = [] }: BoardProps) => {
 
     // Item within the same column being sorted
     if (activeData?.categoryId === overData?.categoryId) {
-       setCategories(prev => {
+       setCategories((prev: Category[]) => {
          const newCats = [...prev];
          const cat = { ...newCats[activeCategoryIndex] };
-         const oldIndex = cat.items.findIndex(i => i.id === activeId);
-         const newIndex = cat.items.findIndex(i => i.id === overId);
+         const oldIndex = cat.items.findIndex(i => (i as Item).id === activeId);
+          const newIndex = cat.items.findIndex(i => (i as Item).id === overId);
          cat.items = arrayMove(cat.items, oldIndex, newIndex);
          newCats[activeCategoryIndex] = cat;
          return newCats;

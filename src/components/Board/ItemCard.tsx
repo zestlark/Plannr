@@ -18,6 +18,7 @@ export const ItemCard = ({ item, categoryId }: Props) => {
   const [isEditingQty, setIsEditingQty] = useState(false);
   const [editName, setEditName] = useState(item.name);
   const [editQty, setEditQty] = useState(item.qty.toString());
+  const [editPrice, setEditPrice] = useState(item.price?.toString() || '');
 
   useEffect(() => {
     setEditQty(item.qty.toString());
@@ -26,6 +27,21 @@ export const ItemCard = ({ item, categoryId }: Props) => {
   useEffect(() => {
     setEditName(item.name);
   }, [item.name]);
+
+  useEffect(() => {
+    setEditPrice(item.price?.toString() || '');
+  }, [item.price]);
+
+  // Debounced Price Sync
+  useEffect(() => {
+    const val = Number(editPrice);
+    if (!isNaN(val) && val !== item.price) {
+      const timer = setTimeout(() => {
+        updateItem(categoryId, item.id, { price: val });
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [editPrice, categoryId, item.id, item.price]);
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
@@ -168,9 +184,9 @@ export const ItemCard = ({ item, categoryId }: Props) => {
               <input
                 type="number"
                 step="any"
-                value={item.price || ''}
+                value={editPrice}
                 onPointerDown={e => e.stopPropagation()}
-                onChange={e => updateItem(categoryId, item.id, { price: Number(e.target.value) || 0 })}
+                onChange={e => setEditPrice(e.target.value)}
                 className="w-12 bg-transparent outline-none text-right hide-arrows text-sm font-bold text-on-surface"
                 placeholder="0"
               />

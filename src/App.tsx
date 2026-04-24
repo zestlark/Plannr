@@ -1,13 +1,29 @@
-import { HashRouter, Routes, Route, useOutletContext } from 'react-router-dom';
-import { AppProvider } from '@/store/AppContext';
+import { HashRouter, Routes, Route, useOutletContext, useParams } from 'react-router-dom';
+import { AppProvider, useAppStore } from '@/store/AppContext';
 import { MainLayout } from '@/components/Navigation/MainLayout';
 import { DashboardView } from '@/views/DashboardView';
 import { PeopleView } from '@/views/PeopleView';
 import { SummaryView } from '@/views/SummaryView';
 import { DataView } from '@/views/DataView';
+import { PlansView } from '@/views/PlansView';
 import { Toaster } from 'sonner';
+import { useEffect } from 'react';
 
-// Helper to bridge search query to views
+// Wrapper to sync route param with store state
+function PlanContextWrapper() {
+  const { planId } = useParams();
+  const { setCurrentPlanId } = useAppStore();
+
+  useEffect(() => {
+    if (planId) {
+      setCurrentPlanId(planId);
+    }
+    return () => setCurrentPlanId(null);
+  }, [planId, setCurrentPlanId]);
+
+  return <MainLayout />;
+}
+
 function DashboardRoute() {
   const { searchQuery } = useOutletContext<{ searchQuery: string }>();
   return <DashboardView searchQuery={searchQuery} />;
@@ -18,7 +34,11 @@ function App() {
     <HashRouter>
       <AppProvider>
         <Routes>
-          <Route path="/" element={<MainLayout />}>
+          {/* Plan selection */}
+          <Route path="/" element={<PlansView />} />
+          
+          {/* Individual Plan routes */}
+          <Route path="/p/:planId" element={<PlanContextWrapper />}>
             <Route index element={<DashboardRoute />} />
             <Route path="people" element={<PeopleView />} />
             <Route path="summary" element={<SummaryView />} />

@@ -18,8 +18,8 @@ export const DataView = () => {
               <span className="material-symbols-outlined text-[28px]">lock</span>
             </div>
             <div>
-              <h3 className="font-bold text-on-surface">Private Storage</h3>
-              <p className="text-sm text-on-surface-variant max-w-md">Your data never leaves this browser. All information is stored locally for maximum privacy and performance.</p>
+              <h3 className="font-bold text-on-surface">Supabase Cloud Sync</h3>
+              <p className="text-sm text-on-surface-variant max-w-md">Your data is securely stored in the cloud. Access your plans from any device in real-time.</p>
             </div>
           </div>
         </div>

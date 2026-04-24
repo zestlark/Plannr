@@ -8,10 +8,19 @@ interface DashboardViewProps {
 }
 
 export const DashboardView = ({ searchQuery }: DashboardViewProps) => {
-  const { addCategory, sortAllItems } = useAppStore();
+  const { addCategory, sortAllItems, loading, initialLoading, activePlan } = useAppStore();
   const [isAdding, setIsAdding] = useState(false);
   const [newCatName, setNewCatName] = useState('');
   const [selectedPersons, setSelectedPersons] = useState<string[]>([]);
+
+  if (initialLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-on-surface-variant font-medium animate-pulse">Syncing with database...</p>
+      </div>
+    );
+  }
 
   const handleAdd = () => {
     if (newCatName.trim()) {
@@ -22,11 +31,17 @@ export const DashboardView = ({ searchQuery }: DashboardViewProps) => {
   };
 
   return (
-    <>
+    <div className="relative">
+      {loading && !initialLoading && (
+        <div className="fixed bottom-8 right-8 bg-surface-container-high border border-primary/20 px-4 py-2 rounded-full shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 z-50">
+          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-xs font-bold text-on-surface uppercase tracking-wider">Syncing...</span>
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md mb-lg">
         <div>
-          <h1 className="font-h1 text-h1 text-on-surface">Shopping Dashboard</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Manage lists and assignments for the upcoming villa trip.</p>
+          <h1 className="font-h1 text-h1 text-on-surface uppercase tracking-tight">{activePlan?.title || 'Shopping Dashboard'}</h1>
+          <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Managing assignments for your villa trip organizer.</p>
         </div>
         <div className="flex items-center gap-sm self-stretch sm:self-auto">
           <PeopleFilter 
@@ -78,6 +93,6 @@ export const DashboardView = ({ searchQuery }: DashboardViewProps) => {
       </div>
       
       <Board searchQuery={searchQuery} peopleFilter={selectedPersons} />
-    </>
+    </div>
   );
 };
