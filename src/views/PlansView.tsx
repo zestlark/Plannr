@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export const PlansView = () => {
-  const { plans, addPlan, deletePlan, setCurrentPlanId, renamePlan, loading, initialLoading } = useAppStore();
+  const { plans, addPlan, deletePlan, setCurrentPlanId, renamePlan, initialLoading } = useAppStore();
   const [newPlanTitle, setNewPlanTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
