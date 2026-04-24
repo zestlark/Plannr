@@ -13,13 +13,12 @@ interface Props {
   category: Category;
 }
 
-const UNITS: UnitType[] = ["pcs", "kg", "ltr", "pack", "gm"];
 
 export const CategoryColumn = ({ category }: Props) => {
   const { addItem, renameCategory, deleteCategory, copyCategoryToClipboard } =
     useAppStore();
   const [val, setVal] = useState("");
-  const [selectedUnit, setSelectedUnit] = useState<UnitType>("pcs");
+  const [selectedUnit] = useState<UnitType>("pcs");
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [newTitle, setNewTitle] = useState(category.title);

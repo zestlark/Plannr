@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { SideNavBar } from "@/components/Navigation/SideNavBar";
 import { TopNavBar } from "@/components/Navigation/TopNavBar";
 import { useState } from "react";
@@ -6,7 +6,6 @@ import { useState } from "react";
 export const MainLayout = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const location = useLocation();
 
   return (
     <div className="flex h-screen bg-background overflow-hidden w-screen">
