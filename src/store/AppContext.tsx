@@ -177,15 +177,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const data = JSON.parse(jsonStr);
       setLoading(true);
 
-      // 1. Import Persons
-      if (data.persons && Array.isArray(data.persons)) {
-        const personsToInsert = data.persons.map((name: string) => ({
-          name,
+      // 1. Import Persons (handle both 'persons' and 'people' key names)
+      const personsArray = data.persons || data.people;
+      if (personsArray && Array.isArray(personsArray)) {
+        // Clear existing persons to avoid unique constraint issues
+        await supabase.from('persons').delete().eq('plan_id', currentPlanId);
+        
+        const personsToInsert = personsArray.map((name: string) => ({
+          name: name.trim(),
           plan_id: currentPlanId
-        }));
-        // Use upsert on name + plan_id if you have a unique constraint, otherwise just insert.
-        // For simplicity with your current schema, we continue with insert or you can use upsert.
-        await supabase.from('persons').upsert(personsToInsert, { onConflict: 'name,plan_id' });
+        })).filter(p => p.name); // Avoid empty names
+
+        if (personsToInsert.length > 0) {
+          const { error: pError } = await supabase.from('persons').insert(personsToInsert);
+          if (pError) console.error('Error importing persons:', pError);
+        }
       }
 
       // 2. Import Categories & Items
