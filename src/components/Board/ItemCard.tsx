@@ -130,6 +130,7 @@ export const ItemCard = ({ item, categoryId }: Props) => {
           onPointerDown={e => e.stopPropagation()}
           onClick={(e) => { e.stopPropagation(); deleteItem(categoryId, item.id); }}
           className="opacity-0 group-hover/item:opacity-100 p-1 text-on-surface-variant hover:text-danger hover:bg-danger/5 rounded-lg transition-all"
+          title="Delete Item"
         >
           <span className="material-symbols-outlined text-[18px]">close</span>
         </button>
