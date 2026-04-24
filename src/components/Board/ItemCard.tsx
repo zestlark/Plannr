@@ -18,7 +18,8 @@ export const ItemCard = ({ item, categoryId }: Props) => {
   const [isEditingQty, setIsEditingQty] = useState(false);
   const [editName, setEditName] = useState(item.name);
   const [editQty, setEditQty] = useState(item.qty.toString());
-  const [editPrice, setEditPrice] = useState(item.price?.toString() || '');
+  const [editPrice, setEditPrice] = useState(item.price ? item.price.toString() : '');
+  const [editTotal, setEditTotal] = useState((item.qty * (item.price || 0)) ? (item.qty * (item.price || 0)).toString() : '');
 
   useEffect(() => {
     setEditQty(item.qty.toString());
@@ -29,8 +30,13 @@ export const ItemCard = ({ item, categoryId }: Props) => {
   }, [item.name]);
 
   useEffect(() => {
-    setEditPrice(item.price?.toString() || '');
+    setEditPrice(item.price ? item.price.toString() : '');
   }, [item.price]);
+
+  useEffect(() => {
+    const total = item.qty * (item.price || 0);
+    setEditTotal(total ? total.toString() : '');
+  }, [item.qty, item.price]);
 
   // Debounced Price Sync
   useEffect(() => {
@@ -84,6 +90,19 @@ export const ItemCard = ({ item, categoryId }: Props) => {
 
   const handlePersonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     updateItem(categoryId, item.id, { person: e.target.value });
+  };
+
+  const handleTotalChange = (val: string) => {
+    setEditTotal(val);
+    const total = parseFloat(val);
+    if (!isNaN(total) && item.qty > 0) {
+      const perPiece = total / item.qty;
+      // Round to 2 decimals for the per-piece cost
+      const formatted = parseFloat(perPiece.toFixed(2));
+      setEditPrice(formatted ? formatted.toString() : '');
+    } else if (val === '') {
+      setEditPrice('');
+    }
   };
 
   return (
@@ -188,6 +207,7 @@ export const ItemCard = ({ item, categoryId }: Props) => {
                 value={editPrice}
                 onPointerDown={e => e.stopPropagation()}
                 onChange={e => setEditPrice(e.target.value)}
+                data-testid="price-input"
                 className="w-12 bg-transparent outline-none text-right hide-arrows text-sm font-bold text-on-surface"
                 placeholder="0"
               />
@@ -245,10 +265,18 @@ export const ItemCard = ({ item, categoryId }: Props) => {
              </div>
           </div>
           
-          <div className="bg-primary/5 px-2 py-0.5 rounded-md border border-primary/10">
-            <span className="text-[11px] font-black text-primary uppercase tracking-tight whitespace-nowrap">
-              Total: ₹{(item.qty * (item.price || 0)).toFixed(0)}
-            </span>
+          <div className="bg-primary/5 px-2 py-0.5 rounded-md border border-primary/10 flex items-center gap-1 group/total transition-all focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary shadow-inner">
+            <span className="text-[10px] font-black text-primary uppercase tracking-tight whitespace-nowrap">Total: ₹</span>
+            <input
+              type="number"
+              step="any"
+              value={editTotal}
+              data-testid="total-input"
+              onPointerDown={e => e.stopPropagation()}
+              onChange={e => handleTotalChange(e.target.value)}
+              className="w-14 bg-transparent outline-none text-right hide-arrows text-[11px] font-black text-primary"
+              placeholder="0"
+            />
           </div>
         </div>
       </div>

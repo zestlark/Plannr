@@ -37,7 +37,8 @@ describe('ItemCard', () => {
     render(<ItemCard item={item as any} categoryId="c1" />);
     expect(screen.getByText('Milk')).toBeInTheDocument();
     expect(screen.getByText('1')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('10')).toBeInTheDocument();
+    expect(screen.getByTestId('price-input')).toHaveValue(10);
+    expect(screen.getByTestId('total-input')).toHaveValue(10);
   });
 
   it('handles name changes', () => {
@@ -77,7 +78,7 @@ describe('ItemCard', () => {
 
   it('debounces price changes', () => {
     render(<ItemCard item={item as any} categoryId="c1" />);
-    const priceInput = screen.getByDisplayValue('10');
+    const priceInput = screen.getByTestId('price-input');
     
     fireEvent.change(priceInput, { target: { value: '15' } });
     
@@ -113,6 +114,39 @@ describe('ItemCard', () => {
     expect(mockStore.deleteItem).toHaveBeenCalledWith('c1', 'i1');
   });
 
+  it('calculates per-unit price from total price', () => {
+    // qty is 2, price is 10, total is 20
+    const itemWithQty = { ...item, qty: 2, price: 10 };
+    render(<ItemCard item={itemWithQty as any} categoryId="c1" />);
+    
+    const totalInput = screen.getByTestId('total-input');
+    fireEvent.change(totalInput, { target: { value: '100' } });
+    
+    // Total 100 / Qty 2 = Price 50
+    const priceInput = screen.getByTestId('price-input');
+    expect(priceInput).toHaveValue(50);
+    
+    // Advance timers to trigger the update
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    
+    expect(mockStore.updateItem).toHaveBeenCalledWith('c1', 'i1', { price: 50 });
+  });
+
+  it('treats zero as a placeholder (empty string) in inputs', () => {
+    const zeroItem = { ...item, price: 0, qty: 5 };
+    render(<ItemCard item={zeroItem as any} categoryId="c1" />);
+    
+    // Price input should be empty (displaying placeholder "0")
+    const priceInput = screen.getByTestId('price-input') as HTMLInputElement;
+    expect(priceInput.value).toBe('');
+    
+    // Total input (5 * 0 = 0) should also be empty
+    const totalInput = screen.getByTestId('total-input') as HTMLInputElement;
+    expect(totalInput.value).toBe('');
+  });
+
   it('stops pointer down propagation on interactive elements', () => {
     const parentPointerDown = vi.fn();
     render(
@@ -125,9 +159,10 @@ describe('ItemCard', () => {
       screen.getByTitle('Delete Item'),
       screen.getByText('remove').closest('button')!,
       screen.getByText('add').closest('button')!,
-      screen.getByDisplayValue('10'), // price input
+      screen.getByTestId('price-input'),
       screen.getByTitle('Alice'), // person select
-      screen.getByDisplayValue('PCS') // unit select
+      screen.getByDisplayValue('PCS'), // unit select
+      screen.getByTestId('total-input')
     ];
 
     elements.forEach(el => {
@@ -140,4 +175,3 @@ describe('ItemCard', () => {
     expect(parentPointerDown).toHaveBeenCalled();
   });
 });
-
