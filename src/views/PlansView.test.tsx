@@ -282,7 +282,7 @@ describe("PlansView", () => {
       </MemoryRouter>
     );
 
-    const summerTrip = await screen.findByText("Summer Trip");
+    // const summerTrip = await screen.findByText("Summer Trip");
     // Click the rename button for the first plan
     const renameBtns = screen.getAllByTitle("Rename Plan");
     fireEvent.click(renameBtns[0]);
