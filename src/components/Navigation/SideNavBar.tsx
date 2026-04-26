@@ -1,5 +1,15 @@
-import { NavLink, useParams } from "react-router-dom";
-import { clsx } from "clsx";
+import { NavLink, useParams, Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { 
+  LayoutDashboard, 
+  Users, 
+  Wallet, 
+  Database, 
+  ArrowLeft, 
+  ShoppingCart,
+  Cloud
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface SideNavBarProps {
   isOpen: boolean;
@@ -14,102 +24,102 @@ export const SideNavBar = ({ isOpen, setIsOpen }: SideNavBarProps) => {
       id: "dashboard",
       path: `/p/${planId}`,
       label: "Dashboard",
-      icon: "dashboard",
+      icon: LayoutDashboard,
       end: true,
     },
     {
       id: "people",
       path: `/p/${planId}/people`,
       label: "People",
-      icon: "groups",
+      icon: Users,
     },
     {
       id: "expense",
       path: `/p/${planId}/summary`,
-      label: "Expense Summary",
-      icon: "payments",
+      label: "Expenses",
+      icon: Wallet,
     },
     {
       id: "data",
       path: `/p/${planId}/settings`,
-      label: "Data Portability",
-      icon: "database",
+      label: "Data Settings",
+      icon: Database,
     },
   ];
 
   return (
     <nav
-      className={clsx(
-        "fixed inset-y-0 left-0 z-30 w-64 border-r border-outline-variant bg-surface p-4 flex flex-col gap-2 transition-transform duration-300 transform md:relative md:translate-x-0 shrink-0 shadow-lg md:shadow-none",
+      className={cn(
+        "fixed inset-y-0 left-0 z-50 w-64 border-r bg-card flex flex-col transition-transform duration-300 transform md:relative md:translate-x-0 shrink-0",
         isOpen ? "translate-x-0" : "-translate-x-full",
       )}
     >
       {/* Header */}
-      <div className="flex items-center gap-sm px-sm mb-lg mt-sm">
-        <div className="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center shrink-0 shadow-sm border border-primary/10">
-          <span
-            className="material-symbols-outlined text-primary text-[24px]"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
-            shopping_cart
-          </span>
-        </div>
-        <div className="min-w-0">
-          <h2 className="font-h2 text-h2 text-on-surface truncate leading-tight uppercase tracking-[0.2em] font-black">
-            Plannr
-          </h2>
-          <p className="font-body-sm text-body-sm text-primary truncate font-bold italic opacity-70">
-            Unified Organizer
-          </p>
-        </div>
+      <div className="flex h-16 items-center px-6 border-b">
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+            <ShoppingCart className="text-primary-foreground w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-sm font-bold tracking-tight leading-none">
+              PLANNR
+            </h2>
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">
+              Unified Organizer
+            </p>
+          </div>
+        </Link>
       </div>
 
-      <NavLink
-        to="/"
-        className="flex items-center gap-md px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-all mb-md border border-outline-variant/20"
-      >
-        <span className="material-symbols-outlined text-[22px]">
-          arrow_back
-        </span>
-        <span className="font-button text-button font-bold italic">
-          All Plans
-        </span>
-      </NavLink>
-
-      {/* Navigation Links */}
-      <div className="flex flex-col gap-sm flex-1 mt-md">
-        {tabs.map((tab) => (
-          <NavLink
-            key={tab.id}
-            to={tab.path}
-            end={tab.end}
-            onClick={() => setIsOpen(false)}
-            className={({ isActive }) =>
-              clsx(
-                "flex items-center gap-md px-md py-sm rounded-xl group transition-all duration-200 border border-transparent shadow-sm",
-                isActive
-                  ? "bg-primary text-on-primary shadow-primary/20 border-primary shadow-md translate-x-1"
-                  : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface",
-              )
-            }
+      <div className="flex-1 flex flex-col gap-1 p-4 overflow-y-auto">
+        <div className="mb-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            asChild 
+            className="w-full justify-start text-muted-foreground hover:text-foreground"
           >
-            <span className="material-symbols-outlined text-[22px]">
-              {tab.icon}
-            </span>
-            <span className="font-button text-button font-semibold">
+            <Link to="/">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              All Plans
+            </Link>
+          </Button>
+        </div>
+
+        <div className="space-y-1">
+          {tabs.map((tab) => (
+            <NavLink
+              key={tab.id}
+              to={tab.path}
+              end={tab.end}
+              onClick={() => setIsOpen(false)}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
+                )
+              }
+            >
+              <tab.icon className="h-4 w-4 shrink-0" />
               {tab.label}
-            </span>
-          </NavLink>
-        ))}
+            </NavLink>
+          ))}
+        </div>
       </div>
 
       {/* Footer Info */}
-      <div className="mt-auto p-md bg-surface-container-low rounded-2xl border border-outline-variant/30">
-        <div className="flex items-center gap-sm">
-          <div className="w-2 h-2 rounded-full bg-success animate-pulse"></div>
-          <span className="font-body-sm text-body-sm font-medium text-on-surface-variant">
-            Cloud Active
+      <div className="p-4 border-t">
+        <div className="flex items-center gap-3 px-3 py-2 bg-muted/50 rounded-md">
+          <div className="relative">
+            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+            <div className="absolute inset-0 w-2 h-2 rounded-full bg-emerald-500 animate-ping opacity-75"></div>
+          </div>
+          <span className="text-xs font-medium text-muted-foreground">
+            Cloud Sync Active
           </span>
+          <Cloud className="h-3 w-3 ml-auto text-muted-foreground/50" />
         </div>
       </div>
     </nav>

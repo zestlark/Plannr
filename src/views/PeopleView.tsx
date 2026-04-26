@@ -2,12 +2,13 @@ import { PeopleManager } from '@/components/Toolbar/PeopleManager';
 
 export const PeopleView = () => {
   return (
-    <div className="animate-in slide-in-from-bottom-2 duration-500">
-      <div className="mb-8">
-        <h1 className="font-h1 text-h1 text-on-surface uppercase tracking-tight">People Management</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-2">Manage people in your group. All changes here update assignments across all lists instantly.</p>
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">People Management</h1>
+        <p className="text-sm text-muted-foreground mt-1">Manage group members and their item assignments.</p>
       </div>
-      <div className="bg-surface-container-low/30 p-gutter rounded-3xl border border-outline-variant/30">
+      
+      <div className="max-w-2xl">
         <PeopleManager />
       </div>
     </div>

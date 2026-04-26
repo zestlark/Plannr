@@ -2,9 +2,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { SummaryView } from './SummaryView';
 import { useAppStore } from '../store/AppContext';
+import { copyToClipboard } from '@/utils';
 
 vi.mock('../store/AppContext', () => ({
   useAppStore: vi.fn(),
+}));
+
+vi.mock('@/utils', () => ({
+  cn: (...args: any[]) => args.filter(Boolean).join(' '),
+  generateWhatsAppSummary: vi.fn(() => 'mock summary'),
+  copyToClipboard: vi.fn(),
 }));
 
 describe('SummaryView', () => {
@@ -51,5 +58,21 @@ describe('SummaryView', () => {
     fireEvent.click(productsTab);
     expect(productsTab).toHaveClass('bg-primary');
     expect(peopleTab).not.toHaveClass('bg-primary');
+  });
+
+  it('shows empty state when no items exist', () => {
+    (useAppStore as any).mockReturnValue({
+      ...mockStore,
+      categories: [{ id: 'c1', title: 'Food', items: [] }],
+    });
+    render(<SummaryView />);
+    expect(screen.getByText('No Expenses Yet')).toBeInTheDocument();
+  });
+
+  it('handles copy summary button click', () => {
+    render(<SummaryView />);
+    const copyBtn = screen.getByRole('button', { name: /Copy WhatsApp Summary/i });
+    fireEvent.click(copyBtn);
+    expect(copyToClipboard).toHaveBeenCalledWith('mock summary', 'Full Summary Copied!');
   });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { DashboardView } from './DashboardView';
 import { useAppStore } from '../store/AppContext';
 
@@ -13,9 +13,12 @@ describe('DashboardView', () => {
     persons: ['Alice'],
     loading: false,
     initialLoading: false,
-    activePlan: { title: 'Summer Trip' },
+    activePlan: { id: 'p1', title: 'Summer Trip' },
     addCategory: vi.fn(),
     sortAllItems: vi.fn(),
+    deletePlan: vi.fn(),
+    addPerson: vi.fn(),
+    removePerson: vi.fn(),
   };
 
   beforeEach(() => {
@@ -106,5 +109,70 @@ describe('DashboardView', () => {
     fireEvent.click(closeButton!);
 
     expect(screen.queryByPlaceholderText('Category name...')).not.toBeInTheDocument();
+  });
+
+  it('handles plan deletion', () => {
+    render(<DashboardView searchQuery="" />);
+    const deleteBtn = screen.getByTitle('Delete Plan');
+    fireEvent.click(deleteBtn);
+    
+    expect(screen.getByText('Delete this entire plan?')).toBeInTheDocument();
+    const confirmBtn = screen.getByRole('button', { name: /^Delete$/ });
+    fireEvent.click(confirmBtn);
+    
+    expect(mockStore.deletePlan).toHaveBeenCalledWith('p1');
+  });
+
+  it('handles managing assignees', () => {
+    render(<DashboardView searchQuery="" />);
+    const addAssigneeBtn = screen.getByText(/Add Assignee/i);
+    fireEvent.click(addAssigneeBtn);
+    
+    expect(screen.getByText('Manage Assignees')).toBeInTheDocument();
+    
+    const dialog = screen.getByRole('dialog');
+    const input = within(dialog).getByPlaceholderText('Name...');
+    fireEvent.change(input, { target: { value: 'Bob' } });
+    fireEvent.click(within(dialog).getByText('Add'));
+    
+    expect(mockStore.addPerson).toHaveBeenCalledWith('Bob');
+    
+    // Test remove person
+    // Test remove person
+    const aliceText = within(dialog).getByText('Alice');
+    const badge = aliceText.closest('[class*="Badge"]') || aliceText.parentElement;
+    const xButton = within(badge as HTMLElement).getByRole('button');
+    fireEvent.click(xButton);
+    expect(mockStore.removePerson).toHaveBeenCalledWith('Alice');
+  });
+
+  it('handles adding person via Enter key', () => {
+    render(<DashboardView searchQuery="" />);
+    fireEvent.click(screen.getByText(/Add Assignee/i));
+    const dialog = screen.getByRole('dialog');
+    const input = within(dialog).getByPlaceholderText('Name...');
+    fireEvent.change(input, { target: { value: 'Bob' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(mockStore.addPerson).toHaveBeenCalledWith('Bob');
+  });
+
+  it('renders correctly with no active plan', () => {
+    (useAppStore as any).mockReturnValue({ ...mockStore, activePlan: null });
+    render(<DashboardView searchQuery="" />);
+    expect(screen.getByText('Kanban Board')).toBeInTheDocument();
+  });
+
+  it('renders correctly with many persons', () => {
+    const manyPersons = ['Alice', 'Bob', 'Charlie', 'David', 'Eve'];
+    (useAppStore as any).mockReturnValue({ ...mockStore, persons: manyPersons });
+    render(<DashboardView searchQuery="" />);
+    expect(screen.getByText('+2')).toBeInTheDocument();
+  });
+
+  it('renders correctly with no persons', () => {
+    (useAppStore as any).mockReturnValue({ ...mockStore, persons: [] });
+    render(<DashboardView searchQuery="" />);
+    fireEvent.click(screen.getByText(/Add Assignee/i));
+    expect(screen.getByText('No assignees yet.')).toBeInTheDocument();
   });
 });

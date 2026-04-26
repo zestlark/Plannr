@@ -1,28 +1,33 @@
 import { DataTools } from '@/components/Toolbar/DataTools';
+import { ShieldCheck } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 export const DataView = () => {
   return (
-    <div className="animate-in slide-in-from-bottom-2 duration-500">
-      <div className="mb-8">
-        <h1 className="font-h1 text-h1 text-on-surface uppercase tracking-tight">System Settings</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-2">Manage your data portability. Export to JSON for backups or import your previous lists.</p>
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">System Settings</h1>
+        <p className="text-sm text-muted-foreground mt-1">Manage your data portability and backup your plans.</p>
       </div>
-      <div className="grid gap-6">
-        <div className="bg-surface-container-low/30 p-gutter rounded-3xl border border-outline-variant/30">
-           <DataTools />
-        </div>
+
+      <div className="grid gap-6 max-w-2xl">
+        <DataTools />
         
-        <div className="p-8 bg-primary/5 rounded-3xl border border-primary/10">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-on-primary shadow-lg shadow-primary/20">
-              <span className="material-symbols-outlined text-[28px]">lock</span>
+        <Card className="bg-primary/5 border-primary/10">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-4">
+              <div className="h-10 w-10 rounded-md bg-primary flex items-center justify-center text-primary-foreground shrink-0">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm">Supabase Cloud Sync</h3>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  Your data is automatically synced with Supabase. Access your villa plans securely from any device in real-time.
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-bold text-on-surface">Supabase Cloud Sync</h3>
-              <p className="text-sm text-on-surface-variant max-w-md">Your data is securely stored in the cloud. Access your plans from any device in real-time.</p>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

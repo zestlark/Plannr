@@ -151,11 +151,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deletePlan = async (id: string) => {
+    const backup = [...plans];
+    setPlans(prev => prev.filter(p => p.id !== id));
+
     const { error } = await supabase.from('plans').delete().eq('id', id);
-    if (error) toast.error('Error deleting plan');
-    else {
+    if (error) {
+      setPlans(backup);
+      toast.error('Error deleting plan');
+      console.error('Delete error:', error);
+    } else {
       toast.success('Plan Deleted');
-      if (currentPlanId === id) setCurrentPlanId(null);
+      if (currentPlanId === id) {
+        setCurrentPlanId(null);
+        setCategories([]);
+        setPersons([]);
+      }
     }
   };
 

@@ -91,17 +91,18 @@ describe('CategoryColumn', () => {
   it('handles category deletion with confirmation', () => {
     render(<CategoryColumn category={category as any} />);
     fireEvent.click(screen.getByTitle('Delete Category'));
-    expect(screen.getByText(/Delete Category\?/)).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Confirm'));
+    expect(screen.getByText('Delete Category')).toBeInTheDocument();
+    const confirmBtn = screen.getByRole('button', { name: /^Delete$/ });
+    fireEvent.click(confirmBtn);
     expect(mockStore.deleteCategory).toHaveBeenCalledWith('c1');
   });
 
   it('cancels category deletion', () => {
     render(<CategoryColumn category={category as any} />);
     fireEvent.click(screen.getByTitle('Delete Category'));
-    expect(screen.getByText(/Delete Category\?/)).toBeInTheDocument();
+    expect(screen.getByText('Delete Category')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Cancel'));
-    expect(screen.queryByText(/Delete Category\?/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Delete Category')).not.toBeInTheDocument();
   });
 
   it('handles copying category', () => {
@@ -135,5 +136,11 @@ describe('CategoryColumn', () => {
     
     expect(mockStore.addItem).toHaveBeenCalledWith('c1', 'Eggs', 'pcs');
     expect(input).toHaveValue('');
+  });
+
+  it('renders empty state when no items', () => {
+    const emptyCategory = { ...category, items: [] };
+    render(<CategoryColumn category={emptyCategory as any} />);
+    expect(screen.getByText('Empty')).toBeInTheDocument();
   });
 });

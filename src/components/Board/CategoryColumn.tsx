@@ -7,12 +7,24 @@ import {
 import { Category, UnitType } from "@/types";
 import { useAppStore } from "@/store/AppContext";
 import { ItemCard } from "./ItemCard";
-import { clsx } from "clsx";
+import { cn } from "@/lib/utils";
+import {
+  Plus,
+  Check,
+  Scroll,
+  GripVertical,
+  Edit2,
+  Trash2,
+  Copy,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { DeleteConfirmDialog } from "@/components/Shared/DeleteConfirmDialog";
 
 interface Props {
   category: Category;
 }
-
 
 export const CategoryColumn = ({ category }: Props) => {
   const { addItem, renameCategory, deleteCategory, copyCategoryToClipboard } =
@@ -21,6 +33,7 @@ export const CategoryColumn = ({ category }: Props) => {
   const [selectedUnit] = useState<UnitType>("pcs");
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const [newTitle, setNewTitle] = useState(category.title);
 
   const { setNodeRef, isOver } = useDroppable({
@@ -44,11 +57,6 @@ export const CategoryColumn = ({ category }: Props) => {
 
   const confirmDelete = () => {
     deleteCategory(category.id);
-    setIsDeleting(false);
-  };
-
-  const handleCopy = () => {
-    copyCategoryToClipboard(category.id);
   };
 
   const itemIds = useMemo(
@@ -57,43 +65,28 @@ export const CategoryColumn = ({ category }: Props) => {
   );
 
   return (
-    <div className="flex flex-col min-w-full md:min-w-[400px] max-h-[75vh] md:max-h-[calc(100vh-230px)] flex-1 shrink-0 bg-surface-container-lowest rounded-2xl shadow-bento border border-outline-variant overflow-hidden group/col">
+    <div
+      className={cn(
+        "flex flex-col min-w-[300px] md:min-w-[320px] max-h-[75vh] md:max-h-[calc(100vh-250px)] flex-1 shrink-0 bg-muted/30 rounded-xl border border-border/50 overflow-hidden group/col transition-shadow hover:shadow-sm",
+        isOver && "ring-2 ring-primary/10",
+      )}
+    >
       {/* Header */}
       <div
-        className={clsx(
-          "p-4 border-b border-outline-variant flex justify-between items-center backdrop-blur-sm sticky top-0 z-10 transition-all",
+        className={cn(
+          "px-4 py-3 flex justify-between items-center transition-colors border-b border-border/10",
           isDeleting
-            ? "bg-error/10"
+            ? "bg-destructive/5"
             : isRenaming
               ? "bg-primary/5"
-              : "bg-surface-container-lowest/80",
+              : "bg-transparent",
         )}
       >
-        {isDeleting ? (
-          <div className="flex items-center justify-between w-full animate-in fade-in slide-in-from-top-2">
-            <span className="text-error font-bold text-xs uppercase tracking-tight">
-              Delete Category?
-            </span>
-            <div className="flex gap-2">
-              <button
-                onClick={confirmDelete}
-                className="bg-error text-on-error px-3 py-1 rounded-lg text-[10px] font-black uppercase hover:bg-error-container hover:text-on-error-container transition-all"
-              >
-                Confirm
-              </button>
-              <button
-                onClick={() => setIsDeleting(false)}
-                className="bg-surface-container-high text-on-surface px-3 py-1 rounded-lg text-[10px] font-black uppercase hover:bg-surface-container-highest transition-all"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : isRenaming ? (
+        {isRenaming ? (
           <div className="flex items-center gap-2 w-full animate-in fade-in slide-in-from-top-2">
-            <input
+            <Input
               autoFocus
-              className="flex-1 px-2 py-1 bg-surface-container-lowest border border-primary rounded-lg text-sm font-semibold outline-none"
+              className="h-8 flex-1 text-sm font-semibold"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => {
@@ -101,59 +94,77 @@ export const CategoryColumn = ({ category }: Props) => {
                 if (e.key === "Escape") setIsRenaming(false);
               }}
             />
-            <button
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8"
               onClick={handleRenameSubmit}
-              className="bg-primary text-on-primary p-1.5 rounded-lg"
             >
-              <span className="material-symbols-outlined text-[18px]">
-                check
-              </span>
-            </button>
+              <Check className="h-4 w-4" />
+              <span className="sr-only">check</span>
+            </Button>
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/5">
-                <span
-                  className="material-symbols-outlined text-primary text-[20px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  inventory_2
-                </span>
-              </div>
-              <h2 className="font-semibold text-on-surface truncate tracking-tight">
+            <div className="flex items-center gap-2 overflow-hidden">
+              <h2 className="text-sm font-bold tracking-tight truncate">
                 {category.title}
               </h2>
+              <Badge
+                variant="secondary"
+                className="h-5 px-1.5 min-w-[20px] justify-center text-[10px] font-bold bg-muted/80 text-muted-foreground border-none"
+              >
+                {category.items.length}
+              </Badge>
             </div>
 
-            <div className="flex items-center gap-1 opacity-0 group-hover/col:opacity-100 transition-opacity">
-              <button
-                onClick={() => setIsRenaming(true)}
-                className="p-1.5 hover:bg-surface-container-high rounded-lg text-on-surface-variant hover:text-primary transition-colors"
-                title="Rename"
+            <div className="flex items-center gap-0.5">
+              <div className="flex items-center opacity-0 group-hover/col:opacity-100 transition-opacity">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Rename"
+                  className="h-8 w-8 text-muted-foreground/50 hover:text-foreground"
+                  onClick={() => setIsRenaming(true)}
+                >
+                  <Edit2 className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Copy Category"
+                  className="h-8 w-8 text-muted-foreground/50 hover:text-foreground"
+                  onClick={() => copyCategoryToClipboard(category.id)}
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Delete Category"
+                  className="h-8 w-8 text-muted-foreground/50 hover:text-destructive"
+                  onClick={() => setIsDeleting(true)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <div className="h-4 w-[1px] bg-border/50 mx-1 hidden group-hover/col:block" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground/50 hover:text-foreground"
               >
-                <span className="material-symbols-outlined text-[18px]">
-                  edit
-                </span>
-              </button>
-              <button
-                onClick={handleCopy}
-                className="p-1.5 hover:bg-surface-container-high rounded-lg text-on-surface-variant hover:text-success transition-colors"
-                title="Copy Category"
+                <GripVertical className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground/50 hover:text-primary transition-colors"
+                onClick={() => setIsAdding(!isAdding)}
               >
-                <span className="material-symbols-outlined text-[18px]">
-                  content_copy
-                </span>
-              </button>
-              <button
-                onClick={() => setIsDeleting(true)}
-                className="p-1.5 hover:bg-surface-container-high rounded-lg text-on-surface-variant hover:text-error transition-colors"
-                title="Delete Category"
-              >
-                <span className="material-symbols-outlined text-[18px]">
-                  delete
-                </span>
-              </button>
+                <span className="sr-only">Add Item</span>
+                <Plus className="h-4 w-4" />
+              </Button>
             </div>
           </>
         )}
@@ -162,9 +173,9 @@ export const CategoryColumn = ({ category }: Props) => {
       {/* Items Area */}
       <div
         ref={setNodeRef}
-        className={clsx(
-          "flex-1 flex flex-col p-2 gap-1 min-h-[150px] overflow-y-auto transition-all relative scrollbar-thin scrollbar-thumb-outline-variant",
-          isOver ? "bg-primary/5" : "",
+        className={cn(
+          "flex-1 flex flex-col p-3 gap-1.5 min-h-[150px] overflow-y-auto transition-colors",
+          isOver && "bg-primary/5",
         )}
       >
         <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
@@ -174,40 +185,44 @@ export const CategoryColumn = ({ category }: Props) => {
         </SortableContext>
 
         {category.items.length === 0 && !isOver && (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-on-surface-variant/40">
-            <span className="material-symbols-outlined text-[48px] mb-2 opacity-20">
-              inventory
-            </span>
-            <p className="text-body-sm font-medium">No items yet</p>
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground/30">
+            <Scroll className="h-10 w-10 mb-2 opacity-20" />
+            <p className="text-[10px] font-bold uppercase tracking-widest">
+              Empty
+            </p>
           </div>
-        )}
-
-        {isOver && (
-          <div className="absolute inset-0 border-2 border-dashed border-primary/30 rounded-xl m-2 pointer-events-none" />
         )}
       </div>
 
       {/* Add Item Footer */}
-      <div className="p-3 border-t border-outline-variant bg-surface-container-low/50">
-        <div className="flex flex-col gap-2">
-          <div className="flex gap-2">
-            <input
-              className="flex-1 px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-sm transition-all focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-              placeholder="What to buy?"
-              value={val}
-              onChange={(e) => setVal(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-            />
-            <button
-              className="w-10 h-10 flex items-center justify-center bg-primary text-on-primary rounded-xl hover:bg-primary-container hover:text-on-primary-container transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:grayscale"
-              onClick={handleAdd}
-              disabled={!val.trim()}
-            >
-              <span className="material-symbols-outlined text-[24px]">add</span>
-            </button>
-          </div>
+      <div className="p-3 border-t bg-muted/20">
+        <div className="flex gap-2">
+          <Input
+            className="h-9 flex-1 bg-background text-sm"
+            placeholder="What to buy?"
+            value={val}
+            onChange={(e) => setVal(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+          />
+          <Button
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            onClick={handleAdd}
+            disabled={!val.trim()}
+          >
+            <span className="sr-only">add</span>
+            <Plus className="h-4 w-4" />
+          </Button>
         </div>
       </div>
+
+      <DeleteConfirmDialog
+        isOpen={isDeleting}
+        onOpenChange={setIsDeleting}
+        onConfirm={confirmDelete}
+        title="Delete Category"
+        description={`Are you sure you want to delete "${category.title}" and all its items? This action cannot be undone.`}
+      />
     </div>
   );
 };

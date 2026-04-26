@@ -109,14 +109,16 @@ describe('AppContext Full Stack', () => {
 
     // Category CRUD
     await act(async () => { await store.addCategory('New Cat'); });
-    await act(async () => { await store.renameCategory('c1', 'New Cat'); });
-    await act(async () => { await store.deleteCategory('c1'); });
-
     // Item CRUD
     await act(async () => { await store.addItem('c1', 'Item'); });
     await act(async () => { await store.updateItem('c1', 'i1', { qty: 2 }); });
+    expect(store.categories[0].items[0].qty).toBe(2);
     await act(async () => { await store.moveItem('i1', 'c2'); });
     await act(async () => { await store.deleteItem('c1', 'i1'); });
+    expect(store.categories[0].items.length).toBe(0);
+
+    // Category deletion (do this after item tests)
+    await act(async () => { await store.deleteCategory('c1'); });
 
     // Import/Export
     store.exportData();
@@ -148,6 +150,39 @@ describe('AppContext Full Stack', () => {
     await act(async () => { await store.deleteItem('c1', 'i1'); });
     await act(async () => { await store.updateItem('c1', 'i1', {}); });
     await act(async () => { await store.moveItem('i1', 'c2'); });
+  });
+
+  it('covers remaining branches including delete active plan and import edge cases', async () => {
+    let store: any;
+    render(<AppProvider><TestComponent onStore={(s) => store = s} /></AppProvider>);
+    await waitFor(() => expect(store).toBeDefined());
+
+    // 1. Delete active plan
+    await act(async () => { store.setCurrentPlanId('1'); });
+    await act(async () => { await store.deletePlan('1'); });
+    expect(store.currentPlanId).toBeNull();
+
+    // 2. Import with 'people' key and empty categories
+    await act(async () => { store.setCurrentPlanId('2'); });
+    const importData = { people: ['Bob', ''], categories: [] };
+    await act(async () => { await store.importData(JSON.stringify(importData)); });
+    
+    // 3. Import with catError
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'categories') return createMockBuilder(null, { message: 'cat err' });
+      return createMockBuilder([]);
+    });
+    const importData2 = { categories: [{ id: 'c1', title: 'X', items: [] }] };
+    await act(async () => { await store.importData(JSON.stringify(importData2)); });
+
+    // 4. Import with itemsError
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'categories') return createMockBuilder([{ id: 'c1' }]);
+      if (table === 'items') return createMockBuilder(null, { message: 'item err' });
+      return createMockBuilder([]);
+    });
+    const importData3 = { categories: [{ id: 'c1', title: 'X', items: [{ id: 'i1', name: 'I' }] }] };
+    await act(async () => { await store.importData(JSON.stringify(importData3)); });
   });
 
   it('covers cleanup and other missing lines', async () => {

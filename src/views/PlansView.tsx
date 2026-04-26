@@ -1,6 +1,22 @@
 import { useAppStore } from '@/store/AppContext';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { 
+  Plus, 
+  Trash2, 
+  Edit2, 
+  Check, 
+  X, 
+  Calendar,
+  Layout,
+  Loader2
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { DeleteConfirmDialog } from '@/components/Shared/DeleteConfirmDialog';
 
 export const PlansView = () => {
   const { plans, addPlan, deletePlan, setCurrentPlanId, renamePlan, initialLoading } = useAppStore();
@@ -8,6 +24,7 @@ export const PlansView = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  const [planToDelete, setPlanToDelete] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleCreate = async () => {
@@ -21,7 +38,7 @@ export const PlansView = () => {
   };
 
   const handleSelectPlan = (id: string) => {
-    if (editingId) return; // Don't navigate while editing
+    if (editingId) return;
     setCurrentPlanId(id);
     navigate(`/p/${id}`);
   };
@@ -35,125 +52,160 @@ export const PlansView = () => {
 
   if (initialLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-[100]">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-[100]">
+        <Loader2 className="h-10 w-10 text-primary animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-gutter animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-xl">
+    <div className="max-w-5xl mx-auto px-6 py-12 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
         <div>
-          <h1 className="text-4xl font-black text-on-surface tracking-tighter">My Plans</h1>
-          <p className="text-on-surface-variant font-medium mt-1">Select a villa trip or create a new one.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight">My Plans</h1>
+          <p className="text-muted-foreground mt-1 text-sm font-medium">Manage your villa trips and shopping organizers.</p>
         </div>
         
         {!isCreating ? (
-          <button 
+          <Button 
             onClick={() => setIsCreating(true)}
-            className="flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-2xl font-bold hover:scale-105 transition-all shadow-lg shadow-primary/20"
+            size="lg"
+            className="h-11 px-6 shadow-md"
           >
-            <span className="material-symbols-outlined">add_circle</span>
+            <Plus className="mr-2 h-4 w-4" />
             New Plan
-          </button>
+          </Button>
         ) : (
           <div className="flex gap-2 w-full md:w-auto animate-in slide-in-from-right-4">
-            <input 
+            <Input 
               autoFocus
-              className="flex-1 md:w-64 px-4 py-3 bg-surface-container border border-primary rounded-2xl outline-none shadow-inner"
+              className="md:w-72 h-11"
               placeholder="Summer Villa 2024..."
               value={newPlanTitle}
               onChange={e => setNewPlanTitle(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleCreate()}
             />
-            <button 
-              onClick={handleCreate}
-              className="bg-primary text-on-primary p-3 rounded-2xl"
-            >
-              <span className="material-symbols-outlined">check</span>
-            </button>
-            <button 
-              onClick={() => setIsCreating(false)}
-              className="bg-surface-container-high p-3 rounded-2xl"
-            >
-              <span className="material-symbols-outlined">close</span>
-            </button>
+            <Button className="h-11 w-11 p-0" onClick={handleCreate}>
+              <Check className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" className="h-11 w-11 p-0" onClick={() => setIsCreating(false)}>
+              <span className="sr-only">close</span>
+              <X className="h-5 w-5" />
+            </Button>
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {plans.length === 0 ? (
-          <div className="col-span-full py-20 flex flex-col items-center justify-center border-4 border-dashed border-outline-variant/20 rounded-3xl opacity-50">
-            <span className="material-symbols-outlined text-[64px] mb-4">maps_home_work</span>
-            <p className="text-xl font-bold">No plans yet. Create your first one!</p>
-          </div>
+          <Card className="col-span-full border-dashed bg-muted/20">
+            <CardContent className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                <Layout className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold">No plans yet</h3>
+              <p className="text-sm text-muted-foreground mt-1 max-w-[250px]">
+                Create your first plan to start organizing your villa shopping lists.
+              </p>
+              <Button variant="outline" className="mt-6" onClick={() => setIsCreating(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Plan
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
           plans.map(plan => (
-            <div 
+            <Card 
               key={plan.id}
               onClick={() => handleSelectPlan(plan.id)}
-              className="group relative bg-surface-container-lowest border border-outline-variant p-6 rounded-3xl hover:border-primary hover:shadow-xl transition-all cursor-pointer flex justify-between items-center"
+              className="group relative hover:border-primary/50 hover:shadow-md transition-all cursor-pointer overflow-hidden border-border/60"
             >
-              <div>
-                {editingId === plan.id ? (
-                  <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                    <input 
-                      autoFocus
-                      className="bg-surface-container-high border-2 border-primary px-3 py-1.5 rounded-xl font-bold outline-none text-lg"
-                      value={editTitle}
-                      onChange={e => setEditTitle(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') handleRename(plan.id);
-                        if (e.key === 'Escape') setEditingId(null);
-                      }}
-                      onBlur={() => handleRename(plan.id)}
-                    />
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1 min-w-0">
+                    {editingId === plan.id ? (
+                      <div onClick={e => e.stopPropagation()} className="mb-2">
+                        <Input 
+                          autoFocus
+                          className="h-8 text-lg font-bold"
+                          value={editTitle}
+                          onChange={e => setEditTitle(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') handleRename(plan.id);
+                            if (e.key === 'Escape') setEditingId(null);
+                          }}
+                          onBlur={() => handleRename(plan.id)}
+                        />
+                      </div>
+                    ) : (
+                      <CardTitle className="text-lg truncate group-hover:text-primary transition-colors">
+                        {plan.title}
+                      </CardTitle>
+                    )}
+                    <CardDescription className="font-mono text-[10px] uppercase tracking-wider">
+                      ID: {plan.id.slice(0, 8)}
+                    </CardDescription>
                   </div>
-                ) : (
-                  <>
-                    <h3 className="text-xl font-bold text-on-surface group-hover:text-primary transition-colors">{plan.title}</h3>
-                    <p className="text-xs text-on-surface-variant font-mono mt-1 opacity-60 uppercase tracking-widest">
-                      ID: {plan.id.slice(0, 8)}...
-                    </p>
-                  </>
-                )}
-                <p className="text-[10px] text-on-surface-variant mt-3 flex items-center gap-1 font-bold">
-                  <span className="material-symbols-outlined text-[14px]">calendar_today</span>
-                  {new Date(plan.created_at).toLocaleDateString()}
-                </p>
-              </div>
-              
-              <div className="flex gap-2 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all">
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditingId(plan.id);
-                    setEditTitle(plan.title);
-                  }}
-                  className="p-3 rounded-xl hover:bg-primary/10 text-on-surface-variant hover:text-primary"
-                  title="Rename Plan"
-                >
-                  <span className="material-symbols-outlined">edit</span>
-                </button>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if(confirm('Delete this entire plan?')) deletePlan(plan.id);
-                  }}
-                  className="p-3 rounded-xl hover:bg-error/10 text-on-surface-variant hover:text-error"
-                >
-                  <span className="material-symbols-outlined">delete</span>
-                </button>
-                <div className="bg-primary/10 text-primary p-3 rounded-xl">
-                  <span className="material-symbols-outlined">chevron_right</span>
+                  
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2" onClick={e => e.stopPropagation()}>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                      title="Rename Plan"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingId(plan.id);
+                        setEditTitle(plan.title);
+                      }}
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPlanToDelete(plan.id);
+                      }}
+                    >
+                      <span className="sr-only">delete</span>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CardHeader>
+              
+              <CardContent className="pt-0">
+                <Separator className="mb-4 opacity-50" />
+                <div className="flex items-center justify-between text-muted-foreground">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest">
+                    <Calendar className="h-3 w-3" />
+                    {new Date(plan.created_at).toLocaleDateString()}
+                  </div>
+                  <Badge variant="secondary" className="text-[9px] font-bold h-5 px-1.5 bg-primary/5 text-primary border-none">
+                    ACTIVE
+                  </Badge>
+                </div>
+              </CardContent>
+              
+              <div className="absolute bottom-0 left-0 w-full h-[2px] bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+            </Card>
           ))
         )}
       </div>
+      <DeleteConfirmDialog 
+        isOpen={!!planToDelete}
+        onOpenChange={(open) => !open && setPlanToDelete(null)}
+        onConfirm={() => {
+          if (planToDelete) {
+            deletePlan(planToDelete);
+            setPlanToDelete(null);
+          }
+        }}
+        title="Delete this entire plan?"
+      />
     </div>
   );
 };

@@ -5,6 +5,7 @@ import {
   fireEvent,
   within,
   waitFor,
+  act,
 } from "@testing-library/react";
 import { PlansView } from "./PlansView";
 import { MemoryRouter } from "react-router-dom";
@@ -94,7 +95,6 @@ describe("PlansView", () => {
   });
 
   it("handles plan deletion confirmation", async () => {
-    window.confirm = vi.fn().mockReturnValue(true);
     render(
       <MemoryRouter>
         <PlansView />
@@ -109,7 +109,14 @@ describe("PlansView", () => {
 
     fireEvent.click(deleteBtn);
 
-    expect(window.confirm).toHaveBeenCalledWith("Delete this entire plan?");
+    // Wait for AlertDialog to appear
+    const dialogTitle = await screen.findByText("Delete this entire plan?");
+    expect(dialogTitle).toBeInTheDocument();
+
+    // Click the confirm button in the dialog
+    const confirmBtn = screen.getByRole("button", { name: /^Delete$/ });
+    fireEvent.click(confirmBtn);
+
     expect(mockStore.deletePlan).toHaveBeenCalledWith("p2");
   });
 
@@ -151,7 +158,9 @@ describe("PlansView", () => {
     fireEvent.click(screen.getByRole("button", { name: /New Plan/i }));
     const input = screen.getByPlaceholderText(/Summer Villa/i);
     fireEvent.change(input, { target: { value: "New Trip" } });
-    fireEvent.keyDown(input, { key: "Enter" });
+    await act(async () => {
+      fireEvent.keyDown(input, { key: "Enter" });
+    });
 
     expect(mockStore.addPlan).toHaveBeenCalledWith("New Trip");
   });
@@ -249,5 +258,39 @@ describe("PlansView", () => {
     fireEvent.blur(input);
 
     expect(mockStore.renamePlan).toHaveBeenCalledWith("p1", "Summer Trip 2024");
+  });
+
+  it("renders empty state and allows creating first plan", () => {
+    mockStore.plans = [];
+    render(
+      <MemoryRouter>
+        <PlansView />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText("No plans yet")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Create Plan/i }));
+    expect(screen.getByPlaceholderText(/Summer Villa/i)).toBeInTheDocument();
+  });
+
+  it('stops propagation on rename input and actions', async () => {
+    const onParentClick = vi.fn();
+    render(
+      <MemoryRouter>
+        <div onClick={onParentClick}>
+          <PlansView />
+        </div>
+      </MemoryRouter>
+    );
+
+    const summerTrip = await screen.findByText("Summer Trip");
+    // Click the rename button for the first plan
+    const renameBtns = screen.getAllByTitle("Rename Plan");
+    fireEvent.click(renameBtns[0]);
+
+    // The input should now be visible with the plan title
+    const input = screen.getByDisplayValue("Summer Trip");
+    fireEvent.click(input);
+    // Parent click should not fire because of stopPropagation on the wrapper div
+    expect(onParentClick).not.toHaveBeenCalled();
   });
 });

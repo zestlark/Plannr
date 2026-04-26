@@ -11,22 +11,24 @@ export const MainLayout = () => {
     <div className="flex h-screen bg-background overflow-hidden w-screen">
       <SideNavBar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative w-full">
+      <div className="flex-1 flex flex-col min-w-0  h-screen overflow-hidden relative w-full">
         <TopNavBar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
         />
 
-        <main className="flex-1 overflow-y-auto p-gutter md:p-xl scrollbar-thin scrollbar-thumb-outline-variant hover:scrollbar-thumb-outline">
-          <Outlet context={{ searchQuery }} />
+        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-muted/30">
+          <div className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8">
+            <Outlet context={{ searchQuery }} />
+          </div>
         </main>
       </div>
 
       {/* Overlay for mobile sidebar */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-20 md:hidden animate-in fade-in duration-200"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden animate-in fade-in duration-200"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
